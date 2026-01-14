@@ -4,6 +4,8 @@ import * as assert from "assert";
 // as well as import your extension to test it
 import * as vscode from "vscode";
 
+import which from "which";
+
 /**
  * Waits for diagnostics to be generated for a specific file URI.
  * @param uri The URI of the file to monitor.
@@ -51,10 +53,12 @@ suite("Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
 
   suiteSetup(async () => {
+    const lutePath = await which("lute");
+
     const config = vscode.workspace.getConfiguration("mandolin");
     await config.update(
       "luteExecPath",
-      "/Users/skanosue/git/roblox/lute/build/xcode/debug/lute/cli/lute",
+      lutePath,
       vscode.ConfigurationTarget.Workspace
     );
   });
