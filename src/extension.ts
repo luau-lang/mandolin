@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFilePromise = promisify(execFile);
 
 let outputChannel: vscode.OutputChannel;
 
@@ -7,55 +10,56 @@ function log(message: string) {
   outputChannel.appendLine(message);
 }
 
-function callLuteLint(
+async function callLuteLint(
   lutePath: string,
   lintArgs: string[],
-  document: vscode.TextDocument,
-  diagnosticsCollection: vscode.DiagnosticCollection
-) {
+  document: vscode.TextDocument
+): Promise<vscode.Diagnostic[]> {
   const diagnostics: vscode.Diagnostic[] = [];
 
-  const luteProcess = execFile(
-    lutePath,
-    ["lint", ...lintArgs, "-s", document.getText()],
-    (_, stdout, stderr) => {
-      log(`Lute stdout: ${stdout}`);
-      const violations = JSON.parse(stdout);
+  try {
+    const { stdout, stderr } = await execFilePromise(lutePath, [
+      "lint",
+      ...lintArgs,
+      "-s",
+      document.getText(),
+    ]);
 
-      for (const violation of violations) {
-        const diagnosticRange = new vscode.Range(
-          violation.range.start.line,
-          violation.range.start.character,
-          violation.range.end.line,
-          violation.range.end.character
-        );
+    log(`Lute stdout: ${stdout}`);
+    const violations = JSON.parse(stdout);
 
-        const diagnostic = new vscode.Diagnostic(
-          diagnosticRange,
-          violation.message,
-          violation.severity
-        );
-        diagnostic.code = violation.code;
-        diagnostic.source = violation.source;
-        diagnostics.push(diagnostic);
-      }
+    for (const violation of violations) {
+      const diagnosticRange = new vscode.Range(
+        violation.range.start.line,
+        violation.range.start.character,
+        violation.range.end.line,
+        violation.range.end.character
+      );
 
-      log(`Parsed ${diagnostics.length} diagnostics from Lute.`);
-
-      if (stderr) {
-        console.error(`Lute stderr: ${stderr}`);
-      }
+      const diagnostic = new vscode.Diagnostic(
+        diagnosticRange,
+        violation.message,
+        violation.severity
+      );
+      diagnostic.code = violation.code;
+      diagnostic.source = violation.source;
+      diagnostics.push(diagnostic);
     }
-  );
 
-  luteProcess.on("close", () => {
-    log(`Setting ${diagnostics.length} diagnostics for ${document.uri}`);
-    diagnosticsCollection.set(document.uri, diagnostics);
-  });
+    log(`Parsed ${diagnostics.length} diagnostics from Lute.`);
+
+    if (stderr) {
+      console.error(`Lute stderr: ${stderr}`);
+    }
+  } catch (error) {
+    log(`Error calling Lute: ${error}`);
+  }
+
+  return diagnostics;
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  outputChannel = vscode.window.createOutputChannel("Lute");
+  outputChannel = vscode.window.createOutputChannel("Mandolin");
   context.subscriptions.push(outputChannel);
 
   const diagnosticsCollection =
@@ -68,26 +72,30 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     const lutePath = vscode.workspace
-      .getConfiguration("lute")
-      .get("execPath", "");
+      .getConfiguration("mandolin")
+      .get("luteExecPath", "");
+
     log(`Lute exec: ${lutePath}`);
 
     if (lutePath !== "") {
-      callLuteLint(lutePath, ["-j"], document, diagnosticsCollection);
+      const diagnostics = await callLuteLint(lutePath, ["-j"], document);
 
       const rulesPath = vscode.workspace
-        .getConfiguration("lute")
+        .getConfiguration("mandolin")
         .get("lintRules", "");
 
       if (rulesPath !== "") {
         log(`Using Lute lint rules: ${rulesPath}`);
-        callLuteLint(
+        const ruleDiagnostics = await callLuteLint(
           lutePath,
           ["-j", "-r", rulesPath],
-          document,
-          diagnosticsCollection
+          document
         );
+        diagnostics.push(...ruleDiagnostics);
       }
+
+      log(`Setting ${diagnostics.length} diagnostics for ${document.uri}`);
+      diagnosticsCollection.set(document.uri, diagnostics);
     }
   }
 

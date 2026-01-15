@@ -1,0 +1,2 @@
+[tools]
+lute = { github = "luau-lang/lute", version = "=0.1.0-nightly.20260114" }
