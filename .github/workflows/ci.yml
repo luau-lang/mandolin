@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["master"]
 
-# CI on the "primary" branch opts out of concurrency grouping by using the run's
+# CI on the "master" branch opts out of concurrency grouping by using the run's
 # unique run_id.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.ref }}
@@ -23,7 +23,7 @@ jobs:
           - os: windows-latest
           - os: ubuntu-latest
           - os: macos-latest
-      fail-fast: false
+      fail-fast: true
 
     steps:
       - uses: actions/checkout@v4
