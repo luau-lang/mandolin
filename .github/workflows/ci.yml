@@ -42,8 +42,13 @@ jobs:
       - name: Install node dependencies
         run: npm install
 
-      - name: Run tests
+      - name: Run tests on Linux
+        run: xvfb-run -a npm test
+        if: runner.os == 'Linux'
+
+      - name: Run tests on non-Linux
         run: npm test
+        if: runner.os != 'Linux'
 
   aggregator:
     name: Gated Commits
