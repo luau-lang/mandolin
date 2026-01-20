@@ -33,12 +33,18 @@ export function waitForDiagnostics(
       );
     }, timeoutMs);
 
+    const startTime = Date.now();
+
     const disposable = vscode.languages.onDidChangeDiagnostics(
       (event: vscode.DiagnosticChangeEvent) => {
         if (event.uris.some((u) => u.toString() === uri.toString())) {
           const diagnostics = vscode.languages.getDiagnostics(uri);
 
           if (diagnostics.length > 0) {
+            const elapsedMs = Date.now() - startTime;
+            console.log(
+              `Diagnostics received in ${elapsedMs}ms for ${uri.fsPath}`
+            );
             clearTimeout(timer);
             disposable.dispose();
             resolve(diagnostics);
