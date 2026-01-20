@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider"
+
 const execFilePromise = promisify(execFile);
 
 let outputChannel: vscode.OutputChannel;
@@ -43,6 +45,12 @@ async function callLuteLint(
       );
       diagnostic.code = violation.code;
       diagnostic.source = violation.source;
+
+      if (violation.suggestedfix) {
+        diagnostic.data = {
+          suggestedfix: violation.suggestedfix
+        };
+      }
       diagnostics.push(diagnostic);
     }
 
@@ -65,6 +73,16 @@ export function activate(context: vscode.ExtensionContext) {
   const diagnosticsCollection =
     vscode.languages.createDiagnosticCollection("lute lint");
   context.subscriptions.push(diagnosticsCollection);
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      [{ language: "luau" }, { language: "lua" }],
+      new SuggestedFixCodeActionProvider(),
+      {
+        providedCodeActionKinds: SuggestedFixCodeActionProvider.providedCodeActionKinds,
+      }
+    )
+  );
 
   async function lint(document: vscode.TextDocument) {
     if (document.languageId !== "luau" && document.languageId !== "lua") {
