@@ -71,7 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(outputChannel);
 
   const diagnosticsCollection =
-    vscode.languages.createDiagnosticCollection("lute lint");
+    vscode.languages.createDiagnosticCollection("mandolin");
   context.subscriptions.push(diagnosticsCollection);
 
   context.subscriptions.push(
@@ -85,6 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   async function lint(document: vscode.TextDocument) {
+    console.log(`Linting document: ${document.uri.toString()}`);
     if (document.languageId !== "luau" && document.languageId !== "lua") {
       return;
     }
@@ -127,7 +128,9 @@ export function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(lint));
 
-  log("Mandolin activated!");
+  vscode.workspace.textDocuments.forEach(lint);
+
+  log("Mandolin !");
 }
 
 export function deactivate() {}
