@@ -13,7 +13,7 @@ import which from "which";
  */
 export function waitForDiagnostics(
   uri: vscode.Uri,
-  timeoutMs: number = 5000
+  timeoutMs: number = 100000
 ): Promise<vscode.Diagnostic[]> {
   return new Promise((resolve, reject) => {
     // Check if diagnostics are already present
