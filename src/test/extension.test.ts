@@ -9,11 +9,11 @@ import which from "which";
 /**
  * Waits for diagnostics to be generated for a specific file URI.
  * @param uri The URI of the file to monitor.
- * @param timeoutMs Maximum time to wait in milliseconds (default 5000ms).
+ * @param timeoutMs Maximum time to wait in milliseconds (default 60000ms).
  */
 export function waitForDiagnostics(
   uri: vscode.Uri,
-  timeoutMs: number = 100000
+  timeoutMs: number = 60000
 ): Promise<vscode.Diagnostic[]> {
   return new Promise((resolve, reject) => {
     // Check if diagnostics are already present
