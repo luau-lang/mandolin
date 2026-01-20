@@ -76,16 +76,17 @@ suite("Extension Test Suite", () => {
   test("Code actions are provided for diagnostics with suggested fixes", async () => {
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
-      content: `"a = b
-b = a"`, // should trigger almost_swapped with suggested fix
+      content: `a = b
+b = a`, // should trigger almost_swapped with suggested fix
     });
     await vscode.window.showTextDocument(document);
 
     const diagnostics = await waitForDiagnostics(document.uri);
+    assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+
     const withFix = diagnostics.find(
       (d) => (d as vscode.Diagnostic & { data?: { suggestedfix?: unknown } }).data?.suggestedfix
     );
-    
     assert.ok(withFix, "Expected a diagnostic with a suggested fix for almost_swapped violation.");
 
     const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
