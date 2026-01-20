@@ -76,7 +76,8 @@ suite("Extension Test Suite", () => {
   test("Code actions are provided for diagnostics with suggested fixes", async () => {
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
-      content: `a = b\nb = a`, // should trigger almost_swapped with suggested fix
+      content: `a = b
+b = a`, // should trigger almost_swapped with suggested fix
     });
     await vscode.window.showTextDocument(document);
 
