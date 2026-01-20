@@ -9,11 +9,11 @@ import which from "which";
 /**
  * Waits for diagnostics to be generated for a specific file URI.
  * @param uri The URI of the file to monitor.
- * @param timeoutMs Maximum time to wait in milliseconds (default 60000ms).
+ * @param timeoutMs Maximum time to wait in milliseconds (default 30000ms).
  */
 export function waitForDiagnostics(
   uri: vscode.Uri,
-  timeoutMs: number = 60000
+  timeoutMs: number = 30000
 ): Promise<vscode.Diagnostic[]> {
   return new Promise((resolve, reject) => {
     // Check if diagnostics are already present
@@ -26,6 +26,9 @@ export function waitForDiagnostics(
     // Set up the timeout
     const timer = setTimeout(() => {
       disposable.dispose();
+      console.log(
+        `Timeout waiting for diagnostics for ${uri.fsPath}. There were diagnostics for ${vscode.languages.getDiagnostics().length} entries.`
+      );
       reject(
         new Error(
           `Timeout: Diagnostics were not generated for ${uri.fsPath} within ${timeoutMs}ms`
