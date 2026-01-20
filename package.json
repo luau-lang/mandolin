@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage"
+    "onLanguage:luau"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -39,6 +39,10 @@
       }
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luau-lang/mandolin.git"
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -50,7 +54,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/vscode": "^1.108.1",
+    "@types/vscode": "^1.107.1",
     "@types/which": "^3.0.4",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
