@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider"
+import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider";
 
 const execFilePromise = promisify(execFile);
 
