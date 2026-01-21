@@ -34,9 +34,9 @@ async function callLuteLint(
     ]);
 
     log(`Lute stdout: ${stdout}`);
-    const parsedViolations = JSON.parse(stdout);
+    const violations = JSON.parse(stdout);
 
-    for (const violation of parsedViolations) {
+    for (const violation of violations) {
       const diagnosticRange = new vscode.Range(
         violation.range.start.line,
         violation.range.start.character,
