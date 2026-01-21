@@ -8,76 +8,83 @@ interface SuggestedFix {
   };
 }
 
-interface DiagnosticData {
-  suggestedfix?: SuggestedFix;
+export interface ActionableViolation {
+  message: string;
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+  suggestedfix: SuggestedFix;
 }
 
-// Augment vscode.Diagnostic to include the 'data' property (exists at runtime per LSP spec)
-declare module "vscode" {
-  interface Diagnostic {
-    data?: DiagnosticData;
-  }
+interface StoredAction {
+  action: vscode.CodeAction;
+  range: vscode.Range;
 }
 
-export class SuggestedFixCodeActionProvider
-  implements vscode.CodeActionProvider
-{
+export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [
     vscode.CodeActionKind.QuickFix,
   ];
 
-  provideCodeActions(
-    document: vscode.TextDocument,
-    _range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext,
-    _token: vscode.CancellationToken,
-  ): vscode.CodeAction[] {
-    const actions: vscode.CodeAction[] = [];
+  private actionsMap = new Map<string, StoredAction[]>();
 
-    for (const diagnostic of context.diagnostics) {
-      if (diagnostic.data?.suggestedfix) {
-        const action = this.createFixAction(
-          document,
-          diagnostic,
-          diagnostic.data.suggestedfix,
-        );
-        actions.push(action);
-      }
+  /**
+   * Update the code actions for a document based on actionable violations from linting.
+   */
+  updateActions(uri: vscode.Uri, actionableViolations: ActionableViolation[]): void {
+    const storedActions: StoredAction[] = [];
+
+    for (const violation of actionableViolations) {
+      const diagnosticRange = new vscode.Range(
+        violation.range.start.line,
+        violation.range.start.character,
+        violation.range.end.line,
+        violation.range.end.character
+      );
+
+      const fixRange = new vscode.Range(
+        violation.suggestedfix.range.start.line,
+        violation.suggestedfix.range.start.character,
+        violation.suggestedfix.range.end.line,
+        violation.suggestedfix.range.end.character
+      );
+
+      const action = new vscode.CodeAction(
+        `Fix: ${violation.message}`,
+        vscode.CodeActionKind.QuickFix
+      );
+
+      action.edit = new vscode.WorkspaceEdit();
+      action.edit.replace(uri, fixRange, violation.suggestedfix.fix);
+      action.isPreferred = true;
+
+      storedActions.push({ action, range: diagnosticRange });
     }
 
-    return actions;
+    this.actionsMap.set(uri.toString(), storedActions);
   }
 
-  private createFixAction(
+  /**
+   * Clear code actions for a document.
+   */
+  clearActions(uri: vscode.Uri): void {
+    this.actionsMap.delete(uri.toString());
+  }
+
+  provideCodeActions(
     document: vscode.TextDocument,
-    diagnostic: vscode.Diagnostic,
-    suggestedfix: SuggestedFix,
-  ): vscode.CodeAction {
-    // Use the suggestedfix location if provided, otherwise fall back to diagnostic range
-    const fixRange = suggestedfix.range
-      ? new vscode.Range(
-          suggestedfix.range.start.line,
-          suggestedfix.range.start.character,
-          suggestedfix.range.end.line,
-          suggestedfix.range.end.character,
-        )
-      : diagnostic.range;
+    range: vscode.Range | vscode.Selection,
+    _context: vscode.CodeActionContext,
+    _token: vscode.CancellationToken
+  ): vscode.CodeAction[] {
+    const storedActions = this.actionsMap.get(document.uri.toString());
+    if (!storedActions) return [];
 
-    const action = new vscode.CodeAction(
-      `Fix: ${diagnostic.message}`,
-      vscode.CodeActionKind.QuickFix,
+    // Return actions whose diagnostic range intersects with the requested range
+    return storedActions.flatMap((stored) =>
+      stored.range.intersection(range) ? [stored.action] : []
     );
-
-    action.edit = new vscode.WorkspaceEdit();
-    action.edit.replace(document.uri, fixRange, suggestedfix.fix);
-
-    // Associate this action with the diagnostic
-    action.diagnostics = [diagnostic];
-
-    // Mark as preferred (shows in lightbulb menu as default)
-    action.isPreferred = true;
-
-    return action;
   }
 }
 
