@@ -51,8 +51,8 @@ async function callLuteLint(
       );
       diagnostic.code = violation.code;
       diagnostic.source = violation.source;
-
       diagnostics.push(diagnostic);
+      
       if (violation.suggestedfix) {
         actionableViolations.push(violation);
       }
