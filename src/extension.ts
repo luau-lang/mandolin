@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import SuggestedFixCodeActionProvider, { ActionableViolation } from "./suggestedFixCodeActionProvider";
+import SuggestedFixCodeActionProvider, { StoredAction } from "./suggestedFixCodeActionProvider";
 
 const execFilePromise = promisify(execFile);
 
@@ -14,7 +14,7 @@ function log(message: string) {
 
 interface LintResult {
   diagnostics: vscode.Diagnostic[];
-  actionableViolations: ActionableViolation[];
+  suggestedFixes: StoredAction[];
 }
 
 async function callLuteLint(
@@ -23,7 +23,7 @@ async function callLuteLint(
   document: vscode.TextDocument
 ): Promise<LintResult> {
   const diagnostics: vscode.Diagnostic[] = [];
-  const actionableViolations: ActionableViolation[] = [];
+  const suggestedFixes: StoredAction[] = [];
 
   try {
     const { stdout, stderr } = await execFilePromise(lutePath, [
@@ -52,9 +52,24 @@ async function callLuteLint(
       diagnostic.code = violation.code;
       diagnostic.source = violation.source;
       diagnostics.push(diagnostic);
-      
-      if (violation.suggestedfix) {
-        actionableViolations.push(violation);
+
+      if (violation.suggestedfix) {      
+          const fixRange = new vscode.Range(
+            violation.suggestedfix.range.start.line,
+            violation.suggestedfix.range.start.character,
+            violation.suggestedfix.range.end.line,
+            violation.suggestedfix.range.end.character
+          );
+
+          const action = new vscode.CodeAction(
+            `Fix: ${violation.message}`,
+            vscode.CodeActionKind.QuickFix
+          );
+          action.edit = new vscode.WorkspaceEdit();
+          action.edit.replace(document.uri, fixRange, violation.suggestedfix.fix);
+          action.isPreferred = true;
+
+          suggestedFixes.push({ action, range: diagnosticRange });
       }
     }
 
@@ -67,7 +82,7 @@ async function callLuteLint(
     log(`Error calling Lute: ${error}`);
   }
 
-  return { diagnostics, actionableViolations };
+  return { diagnostics, suggestedFixes };
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -103,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
     log(`Lute exec: ${lutePath}`);
 
     if (lutePath !== "") {
-      const { diagnostics, actionableViolations } = await callLuteLint(lutePath, ["-j"], document);
+      const { diagnostics, suggestedFixes } = await callLuteLint(lutePath, ["-j"], document);
 
       const rulesPath = vscode.workspace
         .getConfiguration("mandolin")
@@ -117,12 +132,12 @@ export function activate(context: vscode.ExtensionContext) {
           document
         );
         diagnostics.push(...ruleResult.diagnostics);
-        actionableViolations.push(...ruleResult.actionableViolations);
+        suggestedFixes.push(...ruleResult.suggestedFixes);
       }
 
       log(`Setting ${diagnostics.length} diagnostics for ${document.uri}`);
       diagnosticsCollection.set(document.uri, diagnostics);
-      codeActionProvider.updateActions(document.uri, actionableViolations);
+      codeActionProvider.updateActions(document.uri, suggestedFixes);
     }
   }
 
