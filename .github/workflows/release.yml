@@ -10,8 +10,6 @@ on:
         required: false
         default: false
         type: boolean
-  pull_request:
-    branches: ["master"]
 
 jobs:
   check:
@@ -63,7 +61,7 @@ jobs:
 
       - name: Set nightly version suffix
         id: set_nightly
-        # if: github.event_name == 'schedule' || github.event.inputs.nightly
+        if: github.event_name == 'schedule' || github.event.inputs.nightly
         run: |
           DATE=$(date +%Y%m%d)
           echo "nightly_tag=nightly.$DATE" >> "$GITHUB_OUTPUT"
@@ -108,11 +106,10 @@ jobs:
           RELEASE_TAG="0.0.1$NIGHTLY_TAG"
           echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Create Draft Release
+      - name: Create Release
         uses: luau-lang/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag_release.outputs.tag }}
           name: ${{ steps.tag_release.outputs.tag }}
-          draft: true
-          prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
+          prerelease: true
           files: mandolin-*.vsix
