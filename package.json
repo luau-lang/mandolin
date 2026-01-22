@@ -35,6 +35,11 @@
           "type": "string",
           "scope": "resource",
           "markdownDescription": "Optional path to custom lint rules"
+        },
+        "mandolin.foremanTomlPath": {
+          "type": "string",
+          "scope": "resource",
+          "markdownDescription": "Optional path to a foreman.toml file describing which version of lute to use"
         }
       }
     }
@@ -51,18 +56,16 @@
     "lint": "eslint src",
     "test": "vscode-test"
   },
-  "dependencies": {
-    "@types/which": "^3.0.4",
-    "which": "^5.0.0"
-  },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.107.1",
+    "@types/which": "^3.0.4",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.52.0"
+    "typescript-eslint": "^8.52.0",
+    "which": "^5.0.0"
   }
 }
