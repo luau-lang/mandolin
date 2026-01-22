@@ -53,7 +53,7 @@ async function callLuteLint(
       diagnostic.source = violation.source;
       diagnostics.push(diagnostic);
 
-      if (violation.suggestedfix) {      
+      if (violation.suggestedfix) {
           const fixRange = new vscode.Range(
             violation.suggestedfix.range.start.line,
             violation.suggestedfix.range.start.character,

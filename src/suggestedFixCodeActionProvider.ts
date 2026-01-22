@@ -1,13 +1,5 @@
 import * as vscode from "vscode";
 
-interface SuggestedFix {
-  fix: string;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
-  };
-}
-
 export interface StoredAction {
   action: vscode.CodeAction;
   range: vscode.Range;
@@ -41,7 +33,10 @@ export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider
     _token: vscode.CancellationToken
   ): vscode.CodeAction[] {
     const storedActions = this.actionsMap.get(document.uri);
-    if (!storedActions) return [];
+  
+    if (!storedActions) {
+      return [];
+    }
 
     // Return actions whose diagnostic range intersects with the requested range
     return storedActions.flatMap((stored) =>

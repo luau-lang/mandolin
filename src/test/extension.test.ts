@@ -99,6 +99,14 @@ b = a`, // should trigger almost_swapped with suggested fix
       diagnostics[0].range
     );
 
-    assert.ok(actions?.some((a) => a.kind?.contains(vscode.CodeActionKind.QuickFix)));
+    const quickFix = actions?.find((a) => a.kind?.contains(vscode.CodeActionKind.QuickFix));
+    assert.ok(quickFix);
+    assert.ok(quickFix.edit);
+
+    const applied = await vscode.workspace.applyEdit(quickFix.edit!);
+    assert.ok(applied, "Expected edit to be applied successfully");
+
+    const newContent = document.getText();
+    assert.equal(newContent, "a, b = b, a");
   });
 });
