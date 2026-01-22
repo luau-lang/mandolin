@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
+
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import which from "which";
+import fs from "fs";
 
 import SuggestedFixCodeActionProvider, { StoredAction } from "./suggestedFixCodeActionProvider";
 
@@ -111,9 +114,53 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const lutePath = vscode.workspace
+    let lutePath: string | null = vscode.workspace
       .getConfiguration("mandolin")
       .get("luteExecPath", "");
+
+    if (lutePath === "") {
+      log("Lute exec path is not set. Using which to find Lute on the PATH.");
+      try {
+        lutePath = which.sync("lute", { nothrow: true });
+
+        if (lutePath === null) {
+          log("Lute not found on PATH. Checking for a Foreman installation.");
+          const foremanToolsPath = `${process.env.HOME}/.foreman/tools`;
+          if (fs.existsSync(foremanToolsPath)) {
+            const files = fs.readdirSync(foremanToolsPath);
+            // TODO: Check workspace for a `foreman.toml` file to determine the correct Lute version.
+            const foremanLute = files.find((file: string) =>
+              file.startsWith("luau-lang__lute")
+            );
+            if (foremanLute) {
+              lutePath = `${foremanToolsPath}/${foremanLute}`;
+            }
+          }
+
+          if (lutePath === null) {
+            log(
+              "Lute not found in Foreman installation directory. Please install Lute or set the luteExecPath in Mandolin settings."
+            );
+            return;
+          }
+        }
+
+        log(
+          `Found Lute at: ${lutePath}. Updating workspace configuration with the discovered path.`
+        );
+
+        await vscode.workspace
+          .getConfiguration("mandolin")
+          .update(
+            "luteExecPath",
+            lutePath,
+            vscode.ConfigurationTarget.Workspace
+          );
+      } catch (e) {
+        log(`Error looking for lute: ${e}`);
+        return;
+      }
+    }
 
     log(`Lute exec: ${lutePath}`);
 

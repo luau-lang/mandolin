@@ -63,7 +63,7 @@ suite("Extension Test Suite", () => {
 
   suiteSetup(async () => {
     const lutePath = await which("lute");
-
+    console.log(`Setting luteExecPath to ${lutePath} for tests.`);
     const config = vscode.workspace.getConfiguration("mandolin");
     await config.update(
       "luteExecPath",
