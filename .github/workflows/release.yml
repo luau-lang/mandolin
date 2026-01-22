@@ -1,0 +1,185 @@
+name: Build and Release
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      nightly:
+        description: "Trigger a nightly build"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+      nightly_tag: ${{ steps.set_nightly.outputs.nightly_tag }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes since last nightly tag
+        id: check
+        run: |
+          PROCEED="true"
+
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "Schedule trigger: Checking changes..."
+
+            LATEST_NIGHTLY_TAG=$(git tag --sort=-creatordate --list '*-nightly.*' | head -n 1)
+
+            if [[ -n "$LATEST_NIGHTLY_TAG" ]]; then
+              echo "Latest nightly tag found: $LATEST_NIGHTLY_TAG"
+              LATEST_NIGHTLY_COMMIT=$(git rev-list -n 1 "$LATEST_NIGHTLY_TAG" 2>/dev/null)
+              CURRENT_HEAD_COMMIT=$(git rev-parse HEAD)
+
+              echo "Commit for tag $LATEST_NIGHTLY_TAG: $LATEST_NIGHTLY_COMMIT"
+              echo "Current HEAD commit: $CURRENT_HEAD_COMMIT"
+
+              if [[ "$LATEST_NIGHTLY_COMMIT" == "$CURRENT_HEAD_COMMIT" ]]; then
+                echo "No code changes detected since the last nightly release ($LATEST_NIGHTLY_TAG)."
+                PROCEED="false"
+              else
+                echo "Code changes detected since $LATEST_NIGHTLY_TAG. Proceeding with build."
+              fi
+            else
+              echo "No previous nightly tag found. Proceeding with build."
+            fi
+          else
+            echo "Manual trigger ('${{ github.event_name }}'). Proceeding with build."
+          fi
+
+          echo "proceed=$PROCEED" >> $GITHUB_OUTPUT
+
+      - name: Set nightly version suffix
+        id: set_nightly
+        if: github.event_name == 'schedule' || github.event.inputs.nightly
+        run: |
+          DATE=$(date +%Y%m%d)
+          echo "nightly_tag=nightly.$DATE" >> "$GITHUB_OUTPUT"
+
+  build-and-release:
+    needs: check
+    if: ${{ needs.check.outputs.proceed == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set nightly version suffix
+        if: needs.check.outputs.nightly_tag
+        run: echo "MANDOLIN_VERSION_SUFFIX=${{ needs.check.outputs.nightly_tag }}" >> "$GITHUB_ENV"
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Install node dependencies
+        run: npm install
+
+      - name: Build Mandolin
+        run: |
+          cd mandolin
+          npx vsce package
+
+      # - name: Upload Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     path: mandolin/mandolin-*.vsix
+      #     name: "mandolin-0.0.1.vsix"
+
+      - name: Create Nightly Tag
+        id: tag_step
+        if: needs.check.outputs.nightly_tag
+        run: |
+          echo "tag=-${{ needs.check.outputs.nightly_tag }}" >> $GITHUB_OUTPUT
+
+      - name: Create Release Tag
+        id: tag_release
+        run: |
+          NIGHTLY_TAG=${{ steps.tag_step.outputs.tag }}
+          RELEASE_TAG="0.0.1$NIGHTLY_TAG"
+          echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Draft Release
+        uses: luau-lang/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag_release.outputs.tag }}
+          name: ${{ steps.tag_release.outputs.tag }}
+          draft: true
+          prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
+          files: mandolin/mandolin-*.vsix
+
+  # release:
+  #   needs: [check, build]
+  #   runs-on: ubuntu-latest
+
+  #   permissions:
+  #     contents: write
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         sparse-checkout: CMakeBuild/get_version.cmake
+
+  #     - name: Download Artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: artifacts
+
+  #     - run: |
+  #         mkdir release
+  #         for dir in ./artifacts/*; do
+  #           base_name=$(basename "$dir")
+  #           chmod 755 "$dir"/* # Artifacts don't preserve permissions, so re-add them.
+  #           zip -rj release/"${base_name}.zip" "$dir"/*
+  #         done
+
+  #     - name: Get project version
+  #       id: get_version
+  #       run: |
+  #         VERSION=$(cmake -P CMakeBuild/get_version.cmake 2>&1)
+  #         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  #     - name: Create Nightly Tag
+  #       id: tag_step
+  #       if: needs.check.outputs.nightly_tag
+  #       run: |
+  #         echo "tag=-${{ needs.check.outputs.nightly_tag }}" >> $GITHUB_OUTPUT
+
+  #     - name: Create Release Tag
+  #       id: tag_release
+  #       run: |
+  #         VERSION=${{ steps.get_version.outputs.version }}
+  #         NIGHTLY_TAG=${{ steps.tag_step.outputs.tag }}
+  #         RELEASE_TAG="$VERSION$NIGHTLY_TAG"
+  #         echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+
+  #     - name: Create Draft Release
+  #       uses: luau-lang/action-gh-release@v2
+  #       with:
+  #         tag_name: ${{ steps.tag_release.outputs.tag }}
+  #         name: ${{ steps.tag_release.outputs.tag }}
+  #         draft: true
+  #         prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
+  #         generate_release_notes: true
+  #         files: release/*.zip
+
+  # - name: Wait for Tag Creation in GitHub
+  #   run: sleep 5
+
+  # - name: Publish Release
+  #   run: gh release edit "${{ steps.tag_release.outputs.tag }}" --draft=false
+  #   env:
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
