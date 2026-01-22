@@ -73,6 +73,9 @@ jobs:
     if: ${{ needs.check.outputs.proceed == 'true' }}
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -118,7 +121,7 @@ jobs:
           name: ${{ steps.tag_release.outputs.tag }}
           draft: true
           prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
-          files: mandolin/mandolin-*.vsix
+          files: mandolin-*.vsix
 
   # release:
   #   needs: [check, build]
