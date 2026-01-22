@@ -63,7 +63,7 @@ jobs:
 
       - name: Set nightly version suffix
         id: set_nightly
-        if: github.event_name == 'schedule' || github.event.inputs.nightly
+        # if: github.event_name == 'schedule' || github.event.inputs.nightly
         run: |
           DATE=$(date +%Y%m%d)
           echo "nightly_tag=nightly.$DATE" >> "$GITHUB_OUTPUT"
@@ -95,12 +95,6 @@ jobs:
       - name: Build Mandolin
         run: npx vsce package
 
-      # - name: Upload Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     path: mandolin/mandolin-*.vsix
-      #     name: "mandolin-0.0.1.vsix"
-
       - name: Create Nightly Tag
         id: tag_step
         if: needs.check.outputs.nightly_tag
@@ -122,67 +116,3 @@ jobs:
           draft: true
           prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
           files: mandolin-*.vsix
-
-  # release:
-  #   needs: [check, build]
-  #   runs-on: ubuntu-latest
-
-  #   permissions:
-  #     contents: write
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #       with:
-  #         sparse-checkout: CMakeBuild/get_version.cmake
-
-  #     - name: Download Artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         path: artifacts
-
-  #     - run: |
-  #         mkdir release
-  #         for dir in ./artifacts/*; do
-  #           base_name=$(basename "$dir")
-  #           chmod 755 "$dir"/* # Artifacts don't preserve permissions, so re-add them.
-  #           zip -rj release/"${base_name}.zip" "$dir"/*
-  #         done
-
-  #     - name: Get project version
-  #       id: get_version
-  #       run: |
-  #         VERSION=$(cmake -P CMakeBuild/get_version.cmake 2>&1)
-  #         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-  #     - name: Create Nightly Tag
-  #       id: tag_step
-  #       if: needs.check.outputs.nightly_tag
-  #       run: |
-  #         echo "tag=-${{ needs.check.outputs.nightly_tag }}" >> $GITHUB_OUTPUT
-
-  #     - name: Create Release Tag
-  #       id: tag_release
-  #       run: |
-  #         VERSION=${{ steps.get_version.outputs.version }}
-  #         NIGHTLY_TAG=${{ steps.tag_step.outputs.tag }}
-  #         RELEASE_TAG="$VERSION$NIGHTLY_TAG"
-  #         echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
-
-  #     - name: Create Draft Release
-  #       uses: luau-lang/action-gh-release@v2
-  #       with:
-  #         tag_name: ${{ steps.tag_release.outputs.tag }}
-  #         name: ${{ steps.tag_release.outputs.tag }}
-  #         draft: true
-  #         prerelease: ${{ github.event.inputs.nightly || github.event_name == 'schedule' }}
-  #         generate_release_notes: true
-  #         files: release/*.zip
-
-  # - name: Wait for Tag Creation in GitHub
-  #   run: sleep 5
-
-  # - name: Publish Release
-  #   run: gh release edit "${{ steps.tag_release.outputs.tag }}" --draft=false
-  #   env:
-  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
