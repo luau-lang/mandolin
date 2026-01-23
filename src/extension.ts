@@ -2,7 +2,8 @@ import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import SuggestedFixCodeActionProvider, { StoredAction } from "./suggestedFixCodeActionProvider";
+import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider";
+import { StoredAction, LintViolation, LintResult } from "./types";
 
 const execFilePromise = promisify(execFile);
 
@@ -10,11 +11,6 @@ let outputChannel: vscode.OutputChannel;
 
 function log(message: string) {
   outputChannel.appendLine(message);
-}
-
-interface LintResult {
-  diagnostics: vscode.Diagnostic[];
-  suggestedFixes: StoredAction[];
 }
 
 async function callLuteLint(
@@ -34,7 +30,7 @@ async function callLuteLint(
     ]);
 
     log(`Lute stdout: ${stdout}`);
-    const violations = JSON.parse(stdout);
+    const violations = JSON.parse(stdout) as [ LintViolation ];
 
     for (const violation of violations) {
       const diagnosticRange = new vscode.Range(
@@ -49,7 +45,11 @@ async function callLuteLint(
         violation.message,
         violation.severity
       );
-      diagnostic.code = violation.code;
+
+      diagnostic.code = violation.codeDescription
+        ? { value: violation.code, target: vscode.Uri.parse(violation.codeDescription) }
+        : violation.code;
+
       diagnostic.source = violation.source;
       diagnostics.push(diagnostic);
 
