@@ -29,7 +29,7 @@ export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider
     _token: vscode.CancellationToken
   ): vscode.CodeAction[] {
     const storedActions = this.actionsMap.get(document.uri);
-  
+
     if (!storedActions) {
       return [];
     }

@@ -33,7 +33,7 @@ async function callLuteLint(
     );
 
     log(`Lute stdout: ${stdout}`);
-    const violations = JSON.parse(stdout) as [ LintViolation ];
+    const violations = JSON.parse(stdout) as [LintViolation];
 
     for (const violation of violations) {
       const diagnosticRange = new vscode.Range(
@@ -250,4 +250,4 @@ export async function activate(context: vscode.ExtensionContext) {
   log("Mandolin !");
 }
 
-export function deactivate() {}
+export function deactivate() { }
