@@ -35,6 +35,11 @@
           "type": "string",
           "scope": "resource",
           "markdownDescription": "Optional path to custom lint rules"
+        },
+        "mandolin.foremanTomlPath": {
+          "type": "string",
+          "scope": "resource",
+          "markdownDescription": "Optional path to a foreman.toml file describing which version of lute to use"
         }
       }
     }

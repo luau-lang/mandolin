@@ -1,8 +1,13 @@
 import * as vscode from "vscode";
+
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import fs from "fs";
+import path from "node:path";
 
-import SuggestedFixCodeActionProvider, { StoredAction } from "./suggestedFixCodeActionProvider";
+import SuggestedFixCodeActionProvider, {
+  StoredAction,
+} from "./suggestedFixCodeActionProvider";
 
 const execFilePromise = promisify(execFile);
 
@@ -20,18 +25,18 @@ interface LintResult {
 async function callLuteLint(
   lutePath: string,
   lintArgs: string[],
-  document: vscode.TextDocument
+  document: vscode.TextDocument,
+  foremanTomlPath?: string
 ): Promise<LintResult> {
   const diagnostics: vscode.Diagnostic[] = [];
   const suggestedFixes: StoredAction[] = [];
 
   try {
-    const { stdout, stderr } = await execFilePromise(lutePath, [
-      "lint",
-      ...lintArgs,
-      "-s",
-      document.getText(),
-    ]);
+    const { stdout, stderr } = await execFilePromise(
+      lutePath,
+      ["lint", ...lintArgs, "-s", document.getText()],
+      { cwd: foremanTomlPath }
+    );
 
     log(`Lute stdout: ${stdout}`);
     const violations = JSON.parse(stdout);
@@ -54,22 +59,22 @@ async function callLuteLint(
       diagnostics.push(diagnostic);
 
       if (violation.suggestedfix) {
-          const fixRange = new vscode.Range(
-            violation.suggestedfix.range.start.line,
-            violation.suggestedfix.range.start.character,
-            violation.suggestedfix.range.end.line,
-            violation.suggestedfix.range.end.character
-          );
+        const fixRange = new vscode.Range(
+          violation.suggestedfix.range.start.line,
+          violation.suggestedfix.range.start.character,
+          violation.suggestedfix.range.end.line,
+          violation.suggestedfix.range.end.character
+        );
 
-          const action = new vscode.CodeAction(
-            `Fix: ${violation.message}`,
-            vscode.CodeActionKind.QuickFix
-          );
-          action.edit = new vscode.WorkspaceEdit();
-          action.edit.replace(document.uri, fixRange, violation.suggestedfix.fix);
-          action.isPreferred = true;
+        const action = new vscode.CodeAction(
+          `Fix: ${violation.message}`,
+          vscode.CodeActionKind.QuickFix
+        );
+        action.edit = new vscode.WorkspaceEdit();
+        action.edit.replace(document.uri, fixRange, violation.suggestedfix.fix);
+        action.isPreferred = true;
 
-          suggestedFixes.push({ action, range: diagnosticRange });
+        suggestedFixes.push({ action, range: diagnosticRange });
       }
     }
 
@@ -85,7 +90,62 @@ async function callLuteLint(
   return { diagnostics, suggestedFixes };
 }
 
-export function activate(context: vscode.ExtensionContext) {
+interface LutePathResult {
+  lutePath: string;
+  foremanToml: string | null;
+}
+
+async function getLutePath(): Promise<LutePathResult | null> {
+  let lutePath: string = vscode.workspace
+    .getConfiguration("mandolin")
+    .get("luteExecPath", "");
+
+  if (lutePath !== "") {
+    return { lutePath, foremanToml: null };
+  }
+
+  log(
+    "Lute exec path is not set. Checking if a Foreman installation is available."
+  );
+
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+
+  if (!workspaceFolders) {
+    log("No workspace folders available to check for a `foreman.toml` file.");
+    return null;
+  }
+
+  log("Checking for a `foreman.toml` file in workspace root folder(s).");
+
+  let foremanToml: string | null = null;
+  for (const folder of workspaceFolders) {
+    const foremanPattern = new vscode.RelativePattern(folder, "foreman.toml");
+    const files = await vscode.workspace.findFiles(foremanPattern, null, 1);
+    if (files.length > 0) {
+      foremanToml = `${folder.uri.fsPath}${path.sep}foreman.toml`;
+      break;
+    }
+  }
+
+  if (foremanToml === null) {
+    log("No `foreman.toml` file found in any workspace root folder.");
+    return null;
+  }
+
+  log(
+    `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in \`~/.foreman/bin\`.`
+  );
+
+  lutePath = `${process.env.HOME}/.foreman/bin/lute`;
+  if (!fs.existsSync(lutePath)) {
+    log(`Lute not found at expected Foreman path: ${lutePath}.`);
+    return null;
+  }
+
+  return { lutePath, foremanToml };
+}
+
+export async function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("Mandolin");
   context.subscriptions.push(outputChannel);
 
@@ -100,10 +160,33 @@ export function activate(context: vscode.ExtensionContext) {
       [{ language: "luau" }, { language: "lua" }],
       codeActionProvider,
       {
-        providedCodeActionKinds: SuggestedFixCodeActionProvider.providedCodeActionKinds,
+        providedCodeActionKinds:
+          SuggestedFixCodeActionProvider.providedCodeActionKinds,
       }
     )
   );
+
+  const lutePathResult = await getLutePath();
+
+  if (lutePathResult === null) {
+    vscode.window.showErrorMessage(
+      "Mandolin: Lute executable not found. Please set the path to a Lute executable in the Mandolin settings or use Foreman to install Lute in your workspace."
+    );
+  } else if (lutePathResult.foremanToml !== null) {
+    const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
+
+    mandolinConfig.update(
+      "luteExecPath",
+      lutePathResult.lutePath,
+      vscode.ConfigurationTarget.Workspace
+    );
+
+    mandolinConfig.update(
+      "foremanTomlPath",
+      lutePathResult.foremanToml,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
 
   async function lint(document: vscode.TextDocument) {
     console.log(`Linting document: ${document.uri.toString()}`);
@@ -111,14 +194,26 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const lutePath = vscode.workspace
-      .getConfiguration("mandolin")
-      .get("luteExecPath", "");
+    const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
+    const lutePath: string | undefined = mandolinConfig.get("luteExecPath");
     log(`Lute exec: ${lutePath}`);
 
-    if (lutePath !== "") {
-      const { diagnostics, suggestedFixes } = await callLuteLint(lutePath, ["-j"], document);
+    const foremanTomlPath: string | undefined =
+      mandolinConfig.get("foremanTomlPath");
+    log(`foreman.toml: ${foremanTomlPath}`);
+
+    if (lutePath !== undefined) {
+      const foremanDirPath = foremanTomlPath
+        ? path.dirname(foremanTomlPath)
+        : undefined;
+
+      const { diagnostics, suggestedFixes } = await callLuteLint(
+        lutePath,
+        ["-j"],
+        document,
+        foremanDirPath
+      );
 
       const rulesPath = vscode.workspace
         .getConfiguration("mandolin")
@@ -129,7 +224,8 @@ export function activate(context: vscode.ExtensionContext) {
         const ruleResult = await callLuteLint(
           lutePath,
           ["-j", "-r", rulesPath],
-          document
+          document,
+          foremanDirPath
         );
         diagnostics.push(...ruleResult.diagnostics);
         suggestedFixes.push(...ruleResult.suggestedFixes);
