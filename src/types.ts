@@ -10,18 +10,9 @@ export interface LintResult {
   suggestedFixes: StoredAction[];
 }
 
-export interface Position {
-  line: number,
-  character: number
-}
-
-export interface LintRange {
-  start: Position,
-  end: Position
-}
 
 export interface LintViolation {
-  range: LintRange,
+  range: vscode.Range,
   severity: number,
   code: string,
   codeDescription?: string,
@@ -30,6 +21,6 @@ export interface LintViolation {
   tags?: [ number ],
   suggestedfix?: {
     fix: string,
-    range: LintRange
+    range: vscode.Range
   }
 }
