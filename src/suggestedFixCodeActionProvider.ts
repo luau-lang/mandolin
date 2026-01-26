@@ -1,9 +1,5 @@
 import * as vscode from "vscode";
-
-export interface StoredAction {
-  action: vscode.CodeAction;
-  range: vscode.Range;
-}
+import { StoredAction } from "./types";
 
 export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [
@@ -33,7 +29,7 @@ export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider
     _token: vscode.CancellationToken
   ): vscode.CodeAction[] {
     const storedActions = this.actionsMap.get(document.uri);
-  
+
     if (!storedActions) {
       return [];
     }
