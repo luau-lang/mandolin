@@ -1,7 +1,9 @@
 import * as vscode from "vscode";
 import { StoredAction } from "./types";
 
-export class SuggestedFixCodeActionProvider implements vscode.CodeActionProvider {
+export class SuggestedFixCodeActionProvider
+  implements vscode.CodeActionProvider
+{
   public static readonly providedCodeActionKinds = [
     vscode.CodeActionKind.QuickFix,
   ];

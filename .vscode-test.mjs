@@ -1,10 +1,10 @@
-import { defineConfig } from '@vscode/test-cli';
+import { defineConfig } from "@vscode/test-cli";
 
 export default defineConfig({
-	files: 'out/test/**/*.test.js',
-    workspaceFolder: './src/test/sampleWorkspace',
-	mocha: {
-      ui: 'tdd',
-      timeout: 60000
-    }
+  files: "out/test/**/*.test.js",
+  workspaceFolder: "./src/test/sampleWorkspace",
+  mocha: {
+    ui: "tdd",
+    timeout: 60000,
+  },
 });

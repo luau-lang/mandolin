@@ -50,7 +50,10 @@ async function callLuteLint(
       );
 
       diagnostic.code = violation.codeDescription
-        ? { value: violation.code, target: vscode.Uri.parse(violation.codeDescription) }
+        ? {
+            value: violation.code,
+            target: vscode.Uri.parse(violation.codeDescription),
+          }
         : violation.code;
 
       diagnostic.source = violation.source;
@@ -250,4 +253,4 @@ export async function activate(context: vscode.ExtensionContext) {
   log("Mandolin !");
 }
 
-export function deactivate() { }
+export function deactivate() {}
