@@ -99,7 +99,9 @@ b = a`, // should trigger almost_swapped with suggested fix
       diagnostics[0].range
     );
 
-    const quickFix = actions?.find((a) => a.kind?.contains(vscode.CodeActionKind.QuickFix));
+    const quickFix = actions?.find((a) =>
+      a.kind?.contains(vscode.CodeActionKind.QuickFix)
+    );
     assert.ok(quickFix);
     assert.ok(quickFix.edit);
 
