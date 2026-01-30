@@ -143,6 +143,8 @@ async function getLutePath(): Promise<LutePathResult | null> {
     return null;
   }
 
+  log(`Lute found at expected Foreman path: ${lutePath}.`);
+
   return { lutePath, foremanToml };
 }
 
