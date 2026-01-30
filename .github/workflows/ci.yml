@@ -46,6 +46,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ./bin
+          echo $(type lute)
           cp $(type lute) ./bin/lute
           chmod +x ./bin/lute
 
