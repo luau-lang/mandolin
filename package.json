@@ -59,12 +59,14 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/sinon": "^21.0.0",
     "@types/vscode": "^1.107.1",
     "@types/which": "^3.0.4",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
     "eslint": "^9.39.2",
+    "sinon": "^21.0.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.52.0",
     "which": "^5.0.0"

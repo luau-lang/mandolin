@@ -170,9 +170,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const lutePathResult = await getLutePath();
 
   if (lutePathResult === null) {
-    vscode.window.showErrorMessage(
-      "Mandolin: Lute executable not found. Please set the path to a Lute executable in the Mandolin settings or use Foreman to install Lute in your workspace."
-    );
+    log("Lute executable path not found. Falling back to bundled Lute.");
   } else if (lutePathResult.foremanToml !== null) {
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
@@ -197,7 +195,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
-    const lutePath: string | undefined = mandolinConfig.get("luteExecPath");
+    const luteExecConfig = mandolinConfig.get("luteExecPath", "");
+
+    const lutePath: string =
+      luteExecConfig === ""
+        ? vscode.Uri.joinPath(context.extensionUri, "lute").fsPath
+        : luteExecConfig;
     log(`Lute exec: ${lutePath}`);
 
     const foremanTomlPath: string | undefined =
