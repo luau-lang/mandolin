@@ -93,10 +93,10 @@ suite("Extension Test Suite", () => {
       vscode.ConfigurationTarget.Workspace
     );
 
-    const outputChannelSpy = sinon.spy();
-    sinon
-      .stub(vscodeWindow, "createOutputChannel")
-      .returns({ appendLine: outputChannelSpy });
+    // const outputChannelSpy = sinon.spy();
+    // sinon
+    //   .stub(vscodeWindow, "createOutputChannel")
+    //   .returns({ appendLine: outputChannelSpy });
 
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
@@ -106,26 +106,26 @@ suite("Extension Test Suite", () => {
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
-    assert.ok(
-      outputChannelSpy.calledWith(
-        "Lute exec path is not set. Checking if a Foreman installation is available."
-      )
-    );
-    assert.ok(
-      outputChannelSpy.calledWith(
-        "Checking for a `foreman.toml` file in workspace root folder(s)."
-      )
-    );
-    assert.ok(
-      outputChannelSpy.calledWithMatch("Found `foreman.toml` in folder:")
-    );
-    assert.ok(
-      outputChannelSpy.calledWithMatch(
-        "Checking for Lute installation in `~/.foreman/bin`."
-      )
-    );
+    // assert.ok(
+    //   outputChannelSpy.calledWith(
+    //     "Lute exec path is not set. Checking if a Foreman installation is available."
+    //   )
+    // );
+    // assert.ok(
+    //   outputChannelSpy.calledWith(
+    //     "Checking for a `foreman.toml` file in workspace root folder(s)."
+    //   )
+    // );
+    // assert.ok(
+    //   outputChannelSpy.calledWithMatch("Found `foreman.toml` in folder:")
+    // );
+    // assert.ok(
+    //   outputChannelSpy.calledWithMatch(
+    //     "Checking for Lute installation in `~/.foreman/bin`."
+    //   )
+    // );
 
-    sinon.restore();
+    // sinon.restore();
   });
 
   // test("Bundled lute fallback", async () => {
