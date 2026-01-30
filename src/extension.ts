@@ -176,13 +176,13 @@ export async function activate(context: vscode.ExtensionContext) {
   } else if (lutePathResult.foremanToml !== null) {
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
-    mandolinConfig.update(
+    await mandolinConfig.update(
       "luteExecPath",
       lutePathResult.lutePath,
       vscode.ConfigurationTarget.Workspace
     );
 
-    mandolinConfig.update(
+    await mandolinConfig.update(
       "foremanTomlPath",
       lutePathResult.foremanToml,
       vscode.ConfigurationTarget.Workspace
