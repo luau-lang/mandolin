@@ -13,6 +13,7 @@ const execFilePromise = promisify(execFile);
 let outputChannel: vscode.OutputChannel;
 
 function log(message: string) {
+  console.log(message);
   outputChannel.appendLine(message);
 }
 
@@ -32,7 +33,6 @@ async function callLuteLint(
       { cwd: foremanTomlPath }
     );
 
-    log(`Lute stdout: ${stdout}`);
     const violations = JSON.parse(stdout) as [LintViolation];
 
     for (const violation of violations) {

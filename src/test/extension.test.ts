@@ -93,9 +93,9 @@ suite("Extension Test Suite", () => {
       vscode.ConfigurationTarget.Workspace
     );
 
-    sinon
-      .stub(vscodeWindow, "createOutputChannel")
-      .returns({ appendLine: (s: string) => console.log(s) });
+    // sinon
+    //   .stub(vscodeWindow, "createOutputChannel")
+    //   .returns({ appendLine: (s: string) => console.log(s) });
 
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
