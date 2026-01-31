@@ -42,6 +42,11 @@ jobs:
       - name: Install node dependencies
         run: npm install
 
+      - name: find lute
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo $(type -p lute)
+
       # - name: Copy lute executable
       #   shell: bash
       #   run: |
