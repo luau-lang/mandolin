@@ -133,11 +133,14 @@ async function getLutePath(): Promise<LutePathResult | null> {
     return null;
   }
 
-  log(
-    `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in \`~/.foreman/bin\`.`
-  );
+  lutePath =
+    process.platform === "win32"
+      ? `${process.env.USERPROFILE}/.foreman/bin/lute`
+      : `${process.env.HOME}/.foreman/bin/lute`;
 
-  lutePath = `${process.env.HOME}/.foreman/bin/lute`;
+  log(
+    `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in ${lutePath}.`
+  );
   if (!fs.existsSync(lutePath)) {
     log(`Lute not found at expected Foreman path: ${lutePath}.`);
     return null;
