@@ -135,7 +135,7 @@ async function getLutePath(): Promise<LutePathResult | null> {
 
   lutePath =
     process.platform === "win32"
-      ? `${process.env.USERPROFILE}/.foreman/bin/lute`
+      ? `${process.env.USERPROFILE}\\.foreman\\bin\\lute`
       : `${process.env.HOME}/.foreman/bin/lute`;
 
   console.log("Environment variables:", process.env);
