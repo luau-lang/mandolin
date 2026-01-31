@@ -138,6 +138,8 @@ async function getLutePath(): Promise<LutePathResult | null> {
       ? `${process.env.USERPROFILE}/.foreman/bin/lute`
       : `${process.env.HOME}/.foreman/bin/lute`;
 
+  console.log("Environment variables:", process.env);
+
   log(
     `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in ${lutePath}.`
   );
