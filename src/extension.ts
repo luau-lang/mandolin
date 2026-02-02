@@ -101,6 +101,8 @@ async function getLutePath(): Promise<LutePathResult | null> {
     .getConfiguration("mandolin")
     .get("luteExecPath", "");
 
+  console.log(`Configured lute path: ${lutePath}`);
+
   if (lutePath !== "") {
     return { lutePath, foremanToml: null };
   }
@@ -137,16 +139,6 @@ async function getLutePath(): Promise<LutePathResult | null> {
     process.platform === "win32"
       ? `${process.env.HOME}\\.foreman\\bin\\lute.exe`
       : `${process.env.HOME}/.foreman/bin/lute`;
-
-  const foremanBinPath = path.dirname(lutePath);
-  if (fs.existsSync(foremanBinPath)) {
-    const files = fs.readdirSync(foremanBinPath);
-    log(`Files in ${foremanBinPath}: ${files.join(", ")}`);
-  } else {
-    log(`Directory ${foremanBinPath} does not exist.`);
-  }
-
-  console.log("Environment variables:", process.env);
 
   log(
     `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in ${lutePath}.`
