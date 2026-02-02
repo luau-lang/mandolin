@@ -42,13 +42,14 @@ jobs:
       - name: Install node dependencies
         run: npm install
 
-      # - name: Copy lute executable
-      #   shell: bash
-      #   run: |
-      #     mkdir -p ./bin
-      #     echo $(type -p lute)
-      #     cp $(type -p lute) ./bin/lute
-      #     chmod +x ./bin/lute
+      - name: Copy lute executable
+        shell: bash
+        run: |
+          mkdir -p ./bin
+          cp $(type -p lute) ./bin/lute
+          if [ "${{ matrix.os }}" != "windows-latest" ]; then
+            chmod +x ./bin/lute
+          fi
 
       - name: Run tests on Linux
         run: xvfb-run -a npm test
