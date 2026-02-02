@@ -87,6 +87,7 @@ suite("Extension Test Suite", () => {
 
   test("Foreman fallback", async () => {
     const config = vscode.workspace.getConfiguration("mandolin");
+    const lutePath = config.get("luteExecPath", "");
     await config.update(
       "luteExecPath",
       "",
@@ -125,6 +126,11 @@ suite("Extension Test Suite", () => {
       )
     );
 
+    await config.update(
+      "luteExecPath",
+      lutePath,
+      vscode.ConfigurationTarget.Workspace
+    );
     sinon.restore();
   });
 
