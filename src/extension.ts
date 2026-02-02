@@ -138,6 +138,14 @@ async function getLutePath(): Promise<LutePathResult | null> {
       ? `${process.env.HOME}\\.foreman\\bin\\lute`
       : `${process.env.HOME}/.foreman/bin/lute`;
 
+  const foremanBinPath = path.dirname(lutePath);
+  if (fs.existsSync(foremanBinPath)) {
+    const files = fs.readdirSync(foremanBinPath);
+    log(`Files in ${foremanBinPath}: ${files.join(", ")}`);
+  } else {
+    log(`Directory ${foremanBinPath} does not exist.`);
+  }
+
   console.log("Environment variables:", process.env);
 
   log(
