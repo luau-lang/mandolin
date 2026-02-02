@@ -75,15 +75,15 @@ suite("Extension Test Suite", () => {
     );
   });
 
-  // test("Sanity", async () => {
-  //   const document = await vscode.workspace.openTextDocument({
-  //     language: "luau",
-  //     content: `local x = 3 / 0`,
-  //   });
+  test("Sanity", async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: "luau",
+      content: `local x = 3 / 0`,
+    });
 
-  //   const diagnostics = await waitForDiagnostics(document.uri);
-  //   assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
-  // });
+    const diagnostics = await waitForDiagnostics(document.uri);
+    assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+  });
 
   test("Foreman fallback", async () => {
     const config = vscode.workspace.getConfiguration("mandolin");
@@ -93,9 +93,10 @@ suite("Extension Test Suite", () => {
       vscode.ConfigurationTarget.Workspace
     );
 
-    // sinon
-    //   .stub(vscodeWindow, "createOutputChannel")
-    //   .returns({ appendLine: (s: string) => console.log(s) });
+    const outputChannelSpy = sinon.spy();
+    sinon
+      .stub(vscodeWindow, "createOutputChannel")
+      .returns({ appendLine: outputChannelSpy });
 
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
@@ -105,26 +106,26 @@ suite("Extension Test Suite", () => {
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
-    // assert.ok(
-    //   outputChannelSpy.calledWith(
-    //     "Lute exec path is not set. Checking if a Foreman installation is available."
-    //   )
-    // );
-    // assert.ok(
-    //   outputChannelSpy.calledWith(
-    //     "Checking for a `foreman.toml` file in workspace root folder(s)."
-    //   )
-    // );
-    // assert.ok(
-    //   outputChannelSpy.calledWithMatch("Found `foreman.toml` in folder:")
-    // );
-    // assert.ok(
-    //   outputChannelSpy.calledWithMatch(
-    //     "Checking for Lute installation in `~/.foreman/bin`."
-    //   )
-    // );
+    assert.ok(
+      outputChannelSpy.calledWith(
+        "Lute exec path is not set. Checking if a Foreman installation is available."
+      )
+    );
+    assert.ok(
+      outputChannelSpy.calledWith(
+        "Checking for a `foreman.toml` file in workspace root folder(s)."
+      )
+    );
+    assert.ok(
+      outputChannelSpy.calledWithMatch("Found `foreman.toml` in folder:")
+    );
+    assert.ok(
+      outputChannelSpy.calledWithMatch(
+        "Checking for Lute installation in `~/.foreman/bin`."
+      )
+    );
 
-    // sinon.restore();
+    sinon.restore();
   });
 
   // test("Bundled lute fallback", async () => {
@@ -192,33 +193,33 @@ suite("Extension Test Suite", () => {
   //   sinon.restore();
   // });
 
-  //   test("Code actions are provided for diagnostics with suggested fixes", async () => {
-  //     const document = await vscode.workspace.openTextDocument({
-  //       language: "luau",
-  //       content: `a = b
-  // b = a`, // should trigger almost_swapped with suggested fix
-  //     });
-  //     await vscode.window.showTextDocument(document);
+  test("Code actions are provided for diagnostics with suggested fixes", async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: "luau",
+      content: `a = b
+  b = a`, // should trigger almost_swapped with suggested fix
+    });
+    await vscode.window.showTextDocument(document);
 
-  //     const diagnostics = await waitForDiagnostics(document.uri);
-  //     assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
-  //     const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-  //       "vscode.executeCodeActionProvider",
-  //       document.uri,
-  //       diagnostics[0].range
-  //     );
+    const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+      "vscode.executeCodeActionProvider",
+      document.uri,
+      diagnostics[0].range
+    );
 
-  //     const quickFix = actions?.find((a) =>
-  //       a.kind?.contains(vscode.CodeActionKind.QuickFix)
-  //     );
-  //     assert.ok(quickFix);
-  //     assert.ok(quickFix.edit);
+    const quickFix = actions?.find((a) =>
+      a.kind?.contains(vscode.CodeActionKind.QuickFix)
+    );
+    assert.ok(quickFix);
+    assert.ok(quickFix.edit);
 
-  //     const applied = await vscode.workspace.applyEdit(quickFix.edit!);
-  //     assert.ok(applied, "Expected edit to be applied successfully");
+    const applied = await vscode.workspace.applyEdit(quickFix.edit!);
+    assert.ok(applied, "Expected edit to be applied successfully");
 
-  //     const newContent = document.getText();
-  //     assert.equal(newContent, "a, b = b, a");
-  //   });
+    const newContent = document.getText();
+    assert.equal(newContent, "a, b = b, a");
+  });
 });
