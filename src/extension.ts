@@ -135,7 +135,7 @@ async function getLutePath(): Promise<LutePathResult | null> {
 
   lutePath =
     process.platform === "win32"
-      ? `${process.env.HOME}\\.foreman\\bin\\lute`
+      ? `${process.env.HOME}\\.foreman\\bin\\lute.exe`
       : `${process.env.HOME}/.foreman/bin/lute`;
 
   const foremanBinPath = path.dirname(lutePath);
