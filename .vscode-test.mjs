@@ -10,8 +10,16 @@ export default defineConfig([
     },
   },
   {
-    files: "out/test/fallbackTests.test.js",
-    workspaceFolder: "./src/test/fallbackWorkspace",
+    files: "out/test/foremanFallback.test.js",
+    workspaceFolder: "./src/test/sampleWorkspace",
+    mocha: {
+      ui: "tdd",
+      timeout: 60000,
+    },
+  },
+  {
+    files: "out/test/bundledFallback.test.js",
+    workspaceFolder: "./src/test/sampleWorkspace",
     mocha: {
       ui: "tdd",
       timeout: 60000,
