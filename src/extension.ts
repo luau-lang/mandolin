@@ -33,6 +33,9 @@ async function callLuteLint(
       { cwd: foremanTomlPath }
     );
 
+    log(`Lute stdout: ${stdout}`);
+    log(`Lute stderr: ${stderr}`);
+
     const violations = JSON.parse(stdout) as [LintViolation];
 
     for (const violation of violations) {
@@ -100,8 +103,6 @@ async function getLutePath(): Promise<LutePathResult | null> {
   let lutePath: string = vscode.workspace
     .getConfiguration("mandolin")
     .get("luteExecPath", "");
-
-  console.log(`Configured lute path: ${lutePath}`);
 
   if (lutePath !== "") {
     return { lutePath, foremanToml: null };
@@ -205,7 +206,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const luteExecConfig = mandolinConfig.get("luteExecPath", "");
 
     const lutePath: string =
-      luteExecConfig === "" || luteExecConfig === undefined
+      luteExecConfig === ""
         ? vscode.Uri.joinPath(context.extensionUri, "bin", "lute").fsPath
         : luteExecConfig;
     log(`Lute exec: ${lutePath}`);

@@ -52,17 +52,11 @@ jobs:
           fi
 
       - name: Run tests on Linux
-        run: |
-          pwd
-          ls bin
-          xvfb-run -a npm test
+        run: xvfb-run -a npm test
         if: runner.os == 'Linux'
 
       - name: Run tests on non-Linux
-        run: |
-          pwd
-          ls bin
-          npm test
+        run: npm test
         if: runner.os != 'Linux'
 
   prettier-check:
