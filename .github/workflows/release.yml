@@ -103,12 +103,7 @@ jobs:
 
       - name: Look for raw lute exec
         shell: bash
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            ls -lap $(cygpath $HOME)/.foreman/tools
-          else
-            ls -lap $HOME/.foreman/tools
-          fi
+        run: ls -lap $HOME/.foreman/tools
 
       - name: Copy lute executable
         shell: bash
