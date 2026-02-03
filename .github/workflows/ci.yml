@@ -57,9 +57,9 @@ jobs:
 
       - name: Run tests on non-Linux
         run: |
-          npm test
           pwd
           ls bin
+          npm test
         if: runner.os != 'Linux'
 
   prettier-check:
