@@ -153,8 +153,7 @@ jobs:
 
       - name: Check workspace
         run: |
-          ls -larp .
-          ls -larp ./artifacts
+          ls -laRp .
 
       - name: Create Draft Release
         uses: luau-lang/action-gh-release@v2
