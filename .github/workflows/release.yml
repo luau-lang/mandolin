@@ -140,7 +140,7 @@ jobs:
           mkdir release
           for dir in ./artifacts/*; do
             base_name=$(basename "$dir")
-            cp "${base_name}"/mandolin.vsix release/"${base_name}"
+            cp artifacts/"${base_name}"/mandolin.vsix release/"${base_name}"
             # chmod 755 "$dir"/* # Artifacts don't preserve permissions, so re-add them.
             # zip -rj release/"${base_name}" "$dir"/*
           done
