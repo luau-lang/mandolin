@@ -69,9 +69,22 @@ jobs:
           echo "nightly_tag=nightly.$DATE" >> "$GITHUB_OUTPUT"
 
   build-and-release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact_name: mandolin-linux-x86_64
+          - os: ubuntu-22.04-arm
+            artifact_name: mandolin-linux-aarch64
+          - os: macos-latest
+            artifact_name: mandolin-macos-aarch64
+          - os: windows-latest
+            artifact_name: mandolin-windows-x86_64
+      fail-fast: false
+
     needs: check
     if: ${{ needs.check.outputs.proceed == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     permissions:
       contents: write
