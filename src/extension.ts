@@ -205,7 +205,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const luteExecConfig = mandolinConfig.get("luteExecPath", "");
 
     const lutePath: string =
-      luteExecConfig === ""
+      luteExecConfig === "" || luteExecConfig === undefined
         ? vscode.Uri.joinPath(context.extensionUri, "bin", "lute").fsPath
         : luteExecConfig;
     log(`Lute exec: ${lutePath}`);
