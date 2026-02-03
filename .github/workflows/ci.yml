@@ -52,7 +52,10 @@ jobs:
           fi
 
       - name: Run tests on Linux
-        run: xvfb-run -a npm test
+        run: |
+          pwd
+          ls bin
+          xvfb-run -a npm test
         if: runner.os == 'Linux'
 
       - name: Run tests on non-Linux
