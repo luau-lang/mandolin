@@ -206,7 +206,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const lutePath: string =
       luteExecConfig === ""
-        ? vscode.Uri.joinPath(context.extensionUri, "lute").fsPath
+        ? vscode.Uri.joinPath(context.extensionUri, "bin", "lute").fsPath
         : luteExecConfig;
     log(`Lute exec: ${lutePath}`);
 
