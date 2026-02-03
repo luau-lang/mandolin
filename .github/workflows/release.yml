@@ -1,6 +1,8 @@
 name: Build and Release
 
 on:
+  pull_request:
+    branches: ["master"]
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
@@ -87,6 +89,21 @@ jobs:
         with:
           node-version: "22.x"
 
+      - name: Install foreman dependencies
+        uses: Roblox/setup-foreman@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allow-external-github-orgs: true
+
+      - name: Copy lute executable
+        shell: bash
+        run: |
+          mkdir -p ./bin
+          cp $(type -p lute) ./bin/lute
+          if [ "${{ matrix.os }}" != "windows-latest" ]; then
+            chmod +x ./bin/lute
+          fi
+
       - name: Install node dependencies
         run: npm install
 
@@ -115,10 +132,10 @@ jobs:
           prerelease: true
           files: mandolin-*.vsix
 
-      - name: Wait for Tag Creation in GitHub
-        run: sleep 5
+      # - name: Wait for Tag Creation in GitHub
+      #   run: sleep 5
 
-      - name: Publish Release
-        run: gh release edit "${{ steps.tag_release.outputs.tag }}" --draft=false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish Release
+      #   run: gh release edit "${{ steps.tag_release.outputs.tag }}" --draft=false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
