@@ -151,14 +151,19 @@ jobs:
           RELEASE_TAG="0.0.1$NIGHTLY_TAG"
           echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Create Draft Release
-        uses: luau-lang/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag_release.outputs.tag }}
-          name: ${{ steps.tag_release.outputs.tag }}
-          draft: true
-          prerelease: true
-          files: artifacts/*.vsix
+      - name: Check workspace
+        run: |
+          ls -la .
+          ls -la ./artifacts
+
+      # - name: Create Draft Release
+      #   uses: luau-lang/action-gh-release@v2
+      #   with:
+      #     tag_name: ${{ steps.tag_release.outputs.tag }}
+      #     name: ${{ steps.tag_release.outputs.tag }}
+      #     draft: true
+      #     prerelease: true
+      #     files: artifacts/*.vsix
 
       # - name: Wait for Tag Creation in GitHub
       #   run: sleep 5
