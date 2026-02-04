@@ -97,7 +97,6 @@ jobs:
         uses: Roblox/setup-foreman@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          allow-external-github-orgs: true
 
       - name: Copy lute executable
         shell: bash
