@@ -21,7 +21,7 @@ This extension contributes the following settings:
 
 To work on Mandolin, you'll need [Node.js](https://nodejs.org/en) and [Foreman](https://github.com/Roblox/foreman).
 To install dependencies, run `npm install` and `foreman install` (assuming you have aliased or placed `npm` and `foreman` on your PATH as appropriate).
-`.vscode/extensions.json` lists a number of recommended VSCode extensions, which will let you do a number of useful things like running and debugging the extension and its tests.
+`.vscode/extensions.json` lists a number of recommended VS Code extensions, which will let you do a number of useful things like running and debugging the extension and its tests.
 
 ### Testing
 
