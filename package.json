@@ -4,7 +4,7 @@
   "description": "Mandolin is an extension designed to consume lint violations reported by Lute!",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.107.1"
+    "vscode": "^1.105.1"
   },
   "categories": [
     "Other"
@@ -59,7 +59,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/vscode": "^1.107.1",
+    "@types/vscode": "^1.105.1",
     "@types/which": "^3.0.4",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
