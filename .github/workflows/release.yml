@@ -66,41 +66,89 @@ jobs:
           DATE=$(date +%Y%m%d)
           echo "nightly_tag=nightly.$DATE" >> "$GITHUB_OUTPUT"
 
-  build-and-release:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact_name: mandolin-linux-x86_64.vsix
+          - os: ubuntu-22.04-arm
+            artifact_name: mandolin-linux-aarch64.vsix
+          - os: macos-latest
+            artifact_name: mandolin-macos-aarch64.vsix
+          - os: windows-latest
+            artifact_name: mandolin-windows-x86_64.vsix
+      fail-fast: false
+
     needs: check
     if: ${{ needs.check.outputs.proceed == 'true' }}
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set nightly version suffix
-        if: needs.check.outputs.nightly_tag
-        run: echo "MANDOLIN_VERSION_SUFFIX=${{ needs.check.outputs.nightly_tag }}" >> "$GITHUB_ENV"
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
 
+      - name: Install foreman dependencies
+        uses: Roblox/setup-foreman@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy lute executable
+        shell: bash
+        run: |
+          mkdir -p ./bin
+          cp $HOME/.foreman/tools/* ./bin/lute
+          if [ "${{ matrix.os }}" != "windows-latest" ]; then
+            chmod +x ./bin/lute
+          fi
+
       - name: Install node dependencies
         run: npm install
 
       - name: Build Mandolin
-        run: npx vsce package
+        run: npx vsce package -o ./mandolin.vsix
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./mandolin.vsix
+          name: ${{ matrix.artifact_name }}
+
+  release:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - run: |
+          mkdir release
+          for dir in ./artifacts/*; do
+            base_name=$(basename "$dir")
+            cp artifacts/"${base_name}"/mandolin.vsix release/"${base_name}"
+          done
 
       - name: Create Nightly Tag
         id: tag_step
         if: needs.check.outputs.nightly_tag
+        shell: bash
         run: |
           echo "tag=-${{ needs.check.outputs.nightly_tag }}" >> $GITHUB_OUTPUT
 
       - name: Create Release Tag
         id: tag_release
+        shell: bash
         run: |
           NIGHTLY_TAG=${{ steps.tag_step.outputs.tag }}
           RELEASE_TAG="0.0.1$NIGHTLY_TAG"
@@ -113,7 +161,7 @@ jobs:
           name: ${{ steps.tag_release.outputs.tag }}
           draft: true
           prerelease: true
-          files: mandolin-*.vsix
+          files: ./release/*.vsix
 
       - name: Wait for Tag Creation in GitHub
         run: sleep 5

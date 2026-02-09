@@ -13,6 +13,7 @@ const execFilePromise = promisify(execFile);
 let outputChannel: vscode.OutputChannel;
 
 function log(message: string) {
+  console.log(message);
   outputChannel.appendLine(message);
 }
 
@@ -33,6 +34,8 @@ async function callLuteLint(
     );
 
     log(`Lute stdout: ${stdout}`);
+    log(`Lute stderr: ${stderr}`);
+
     const violations = JSON.parse(stdout) as [LintViolation];
 
     for (const violation of violations) {
@@ -133,15 +136,20 @@ async function getLutePath(): Promise<LutePathResult | null> {
     return null;
   }
 
-  log(
-    `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in \`~/.foreman/bin\`.`
-  );
+  lutePath =
+    process.platform === "win32"
+      ? `${process.env.HOME}\\.foreman\\bin\\lute.exe`
+      : `${process.env.HOME}/.foreman/bin/lute`;
 
-  lutePath = `${process.env.HOME}/.foreman/bin/lute`;
+  log(
+    `Found \`foreman.toml\` in folder: ${foremanToml}. Checking for Lute installation in ${lutePath}.`
+  );
   if (!fs.existsSync(lutePath)) {
     log(`Lute not found at expected Foreman path: ${lutePath}.`);
     return null;
   }
+
+  log(`Lute found at expected Foreman path: ${lutePath}.`);
 
   return { lutePath, foremanToml };
 }
@@ -170,19 +178,17 @@ export async function activate(context: vscode.ExtensionContext) {
   const lutePathResult = await getLutePath();
 
   if (lutePathResult === null) {
-    vscode.window.showErrorMessage(
-      "Mandolin: Lute executable not found. Please set the path to a Lute executable in the Mandolin settings or use Foreman to install Lute in your workspace."
-    );
+    log("Lute executable path not found. Falling back to bundled Lute.");
   } else if (lutePathResult.foremanToml !== null) {
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
-    mandolinConfig.update(
+    await mandolinConfig.update(
       "luteExecPath",
       lutePathResult.lutePath,
       vscode.ConfigurationTarget.Workspace
     );
 
-    mandolinConfig.update(
+    await mandolinConfig.update(
       "foremanTomlPath",
       lutePathResult.foremanToml,
       vscode.ConfigurationTarget.Workspace
@@ -197,7 +203,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
-    const lutePath: string | undefined = mandolinConfig.get("luteExecPath");
+    const luteExecConfig = mandolinConfig.get("luteExecPath", "");
+
+    const lutePath: string =
+      luteExecConfig === ""
+        ? vscode.Uri.joinPath(context.extensionUri, "bin", "lute").fsPath
+        : luteExecConfig;
     log(`Lute exec: ${lutePath}`);
 
     const foremanTomlPath: string | undefined =
