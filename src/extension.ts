@@ -60,6 +60,21 @@ async function callLuteLint(
         : violation.code;
 
       diagnostic.source = violation.source;
+
+      if (violation.tags) {
+        diagnostic.tags = violation.tags.flatMap((tag) => {
+          switch (tag) {
+            case 1:
+              return [vscode.DiagnosticTag.Unnecessary];
+            case 2:
+              return [vscode.DiagnosticTag.Deprecated];
+            default:
+              log(`Unknown diagnostic tag: ${tag}`);
+              return [];
+          }
+        });
+      }
+
       diagnostics.push(diagnostic);
 
       if (violation.suggestedfix) {
