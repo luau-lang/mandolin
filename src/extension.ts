@@ -49,7 +49,7 @@ async function callLuteLint(
       const diagnostic = new vscode.Diagnostic(
         diagnosticRange,
         violation.message,
-        violation.severity
+        violation.severity - 1
       );
 
       diagnostic.code = violation.codeDescription
