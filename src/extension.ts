@@ -7,6 +7,7 @@ import path from "node:path";
 
 import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider";
 import { StoredAction, LintViolation, LintResult } from "./types";
+import { resolveConfigPath } from "./resolveConfigPath";
 
 const execFilePromise = promisify(execFile);
 
@@ -15,22 +16,6 @@ let outputChannel: vscode.OutputChannel;
 function log(message: string) {
   console.log(message);
   outputChannel.appendLine(message);
-}
-
-function resolveConfigPath(
-  configPath: string,
-  documentUri: vscode.Uri
-): string {
-  if (path.isAbsolute(configPath)) {
-    return configPath;
-  }
-
-  const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
-  if (workspaceFolder) {
-    return path.resolve(workspaceFolder.uri.fsPath, configPath);
-  }
-
-  return configPath;
 }
 
 async function callLuteLint(
