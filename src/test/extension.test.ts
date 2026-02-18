@@ -61,4 +61,31 @@ suite("Extension Test Suite", () => {
     const newContent = document.getText();
     assert.equal(newContent, "a, b = b, a");
   });
+
+  test("Tags are parsed for diagnostics with tags", async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: "luau",
+      content: `local x = 0`, // should trigger unused_variable
+    });
+    await vscode.window.showTextDocument(document);
+
+    const diagnostics = await waitForDiagnostics(document.uri);
+    assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+
+    assert.notEqual(
+      diagnostics[0].tags,
+      undefined,
+      "Expected diagnostic to have tags"
+    );
+
+    const tags = diagnostics[0].tags!;
+
+    assert.equal(tags.length, 1, "Expected diagnostic to have exactly one tag");
+
+    assert.equal(
+      tags[0],
+      vscode.DiagnosticTag.Unnecessary,
+      "Expected tag to be Unnecessary"
+    );
+  });
 });
