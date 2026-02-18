@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as path from "path";
 
 import * as vscode from "vscode";
 
@@ -18,17 +19,17 @@ suite("resolveConfigPath", () => {
     const documentUri = vscode.workspace.workspaceFolders![0].uri;
 
     const result = resolveConfigPath("./config/lint.config.luau", documentUri);
-    assert.equal(result, `${workspaceRoot}/config/lint.config.luau`);
+    assert.equal(result, path.join(workspaceRoot, "config", "lint.config.luau"));
   });
 
   test("resolves parent-relative paths against the workspace root", () => {
     const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const documentUri = vscode.workspace.workspaceFolders![0].uri;
     // e.g. /Users/dev/project -> /Users/dev/shared/lint.config.luau
-    const parentDir = workspaceRoot.substring(0, workspaceRoot.lastIndexOf("/"));
+    const parentDir = path.dirname(workspaceRoot);
 
     const result = resolveConfigPath("../shared/lint.config.luau", documentUri);
-    assert.equal(result, `${parentDir}/shared/lint.config.luau`);
+    assert.equal(result, path.join(parentDir, "shared", "lint.config.luau"));
   });
 
   test("returns relative path as-is when no workspace folder is found", () => {
