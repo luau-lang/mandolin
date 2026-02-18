@@ -7,6 +7,7 @@ import path from "node:path";
 
 import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider";
 import { StoredAction, LintViolation, LintResult } from "./types";
+import { resolveConfigPath } from "./resolveConfigPath";
 
 const execFilePromise = promisify(execFile);
 
@@ -229,28 +230,40 @@ export async function activate(context: vscode.ExtensionContext) {
     const foremanTomlPath: string | undefined =
       mandolinConfig.get("foremanTomlPath");
     log(`foreman.toml: ${foremanTomlPath}`);
+    const resolvedForemanTomlPath =
+      foremanTomlPath !== undefined
+        ? resolveConfigPath(foremanTomlPath, document.uri)
+        : undefined;
 
     if (lutePath !== undefined) {
-      const foremanDirPath = foremanTomlPath
-        ? path.dirname(foremanTomlPath)
+      const foremanDirPath = resolvedForemanTomlPath
+        ? path.dirname(resolvedForemanTomlPath)
         : undefined;
+
+      const configPath: string = mandolinConfig.get("lintConfigPath", "");
+      const configArgs: string[] = [];
+
+      if (configPath !== "") {
+        const resolvedConfigPath = resolveConfigPath(configPath, document.uri);
+        log(`Using Lute lint config: ${resolvedConfigPath}`);
+        configArgs.push("-c", resolvedConfigPath);
+      }
 
       const { diagnostics, suggestedFixes } = await callLuteLint(
         lutePath,
-        ["-j"],
+        ["-j", ...configArgs],
         document,
         foremanDirPath
       );
 
-      const rulesPath = vscode.workspace
-        .getConfiguration("mandolin")
-        .get("lintRules", "");
+      const rulesPath: string = mandolinConfig.get("lintRules", "");
 
       if (rulesPath !== "") {
-        log(`Using Lute lint rules: ${rulesPath}`);
+        const resolvedRulesPath = resolveConfigPath(rulesPath, document.uri);
+        log(`Using Lute lint rules: ${resolvedRulesPath}`);
         const ruleResult = await callLuteLint(
           lutePath,
-          ["-j", "-r", rulesPath],
+          ["-j", "-r", resolvedRulesPath, ...configArgs],
           document,
           foremanDirPath
         );
