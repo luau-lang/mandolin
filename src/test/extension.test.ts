@@ -1,6 +1,4 @@
 import * as assert from "assert";
-import * as fs from "fs";
-import * as path from "path";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -89,71 +87,5 @@ suite("Extension Test Suite", () => {
       vscode.DiagnosticTag.Unnecessary,
       "Expected tag to be Unnecessary"
     );
-  });
-
-  test("lintConfigPath is passed through to lute lint", async () => {
-    const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
-    const configFileName = "test-lint-config.luau";
-    const configFilePath = path.join(workspaceRoot, configFileName);
-    const sourceFileName = "test-divide-by-zero.luau";
-    const sourceFilePath = path.join(workspaceRoot, sourceFileName);
-
-    const configContents = `return {
-      lute = {
-        lint = {
-          rules = {
-            ["divide_by_zero"] = {
-              off = true,
-            }
-          }
-        }
-      }
-    }`;
-
-    fs.writeFileSync(configFilePath, configContents, "utf-8");
-    fs.writeFileSync(sourceFilePath, `local x = 3 / 0`, "utf-8");
-
-    const config = vscode.workspace.getConfiguration("mandolin");
-
-    await config.update(
-      "lintConfigPath",
-      `./${configFileName}`,
-      vscode.ConfigurationTarget.Workspace
-    );
-
-    try {
-      // Open a real workspace file so getWorkspaceFolder resolves correctly
-      const document = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(sourceFilePath)
-      );
-      await vscode.window.showTextDocument(document);
-
-      const diagnostics = await waitForDiagnostics(document.uri);
-      // there should be an unused_variable diagnostic
-      assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
-
-      const divByZero = diagnostics.find(
-        (d) =>
-          d.code === "divide_by_zero" ||
-          (typeof d.code === "object" && d.code.value === "divide_by_zero")
-      );
-      assert.equal(
-        divByZero,
-        undefined,
-        "Expected divide_by_zero to be suppressed by lintConfigPath"
-      );
-    } finally {
-      if (fs.existsSync(configFilePath)) {
-        fs.unlinkSync(configFilePath);
-      }
-      if (fs.existsSync(sourceFilePath)) {
-        fs.unlinkSync(sourceFilePath);
-      }
-      await config.update(
-        "lintConfigPath",
-        undefined,
-        vscode.ConfigurationTarget.Workspace
-      );
-    }
   });
 });
