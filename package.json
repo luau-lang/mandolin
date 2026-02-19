@@ -40,11 +40,6 @@
           "type": "string",
           "scope": "resource",
           "markdownDescription": "Optional path to a foreman.toml file describing which version of lute to use"
-        },
-        "mandolin.lintConfigPath": {
-          "type": "string",
-          "scope": "resource",
-          "markdownDescription": "Optional path to a .config.luau file containing lute lint configuration."
         }
       }
     }
