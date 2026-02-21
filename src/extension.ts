@@ -256,7 +256,7 @@ export async function activate(context: vscode.ExtensionContext) {
         log(`Using Lute lint rules: ${resolvedRulesPath}`);
         const ruleResult = await callLuteLint(
           lutePath,
-          ["-j", "-r", resolvedRulesPath, ...configArgs],
+          ["-j", "-r", resolvedRulesPath],
           document,
           foremanDirPath
         );
