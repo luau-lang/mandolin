@@ -26,6 +26,16 @@ suite("resolveConfigPath", () => {
     );
   });
 
+  test("handles ${workspaceFolder} syntax", () => {
+    const relativePath = "${workspaceFolder}/config/lint.config.luau";
+
+    const result = resolveConfigPath(relativePath, workspaceRoot);
+    assert.equal(
+      result,
+      path.join(workspaceRoot, "config", "lint.config.luau")
+    );
+  });
+
   test("resolves parent-relative paths against the workspace root", () => {
     const parentDir = path.dirname(workspaceRoot);
 
