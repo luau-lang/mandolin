@@ -12,7 +12,7 @@ suite("resolveConfigPath", () => {
     const absolutePath = "/opt/shared/lint.config.luau";
 
     const result = resolveConfigPath(absolutePath, workspaceRoot);
-    assert.equal(result, absolutePath);
+    assert.equal(result, path.resolve(absolutePath));
   });
 
   test("resolves relative paths against the workspace root", () => {
