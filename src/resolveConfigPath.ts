@@ -4,14 +4,6 @@ export function resolveConfigPath(
   configPath: string,
   workspaceRoot?: string
 ): string {
-  // explicitly handle ${workspaceFolder}
-  if (
-    configPath.includes("${workspaceFolder}") &&
-    workspaceRoot !== undefined
-  ) {
-    configPath = configPath.replace("${workspaceFolder}", workspaceRoot);
-  }
-
   if (path.isAbsolute(configPath)) {
     return path.resolve(configPath);
   }
