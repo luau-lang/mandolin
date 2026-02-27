@@ -7,6 +7,7 @@ import path from "node:path";
 
 import SuggestedFixCodeActionProvider from "./suggestedFixCodeActionProvider";
 import { StoredAction, LintViolation, LintResult } from "./types";
+import { resolveConfigPath } from "./resolveConfigPath";
 
 const execFilePromise = promisify(execFile);
 
@@ -210,6 +211,8 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   }
 
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
   async function lint(document: vscode.TextDocument) {
     console.log(`Linting document: ${document.uri.toString()}`);
     if (document.languageId !== "luau" && document.languageId !== "lua") {
@@ -229,10 +232,14 @@ export async function activate(context: vscode.ExtensionContext) {
     const foremanTomlPath: string | undefined =
       mandolinConfig.get("foremanTomlPath");
     log(`foreman.toml: ${foremanTomlPath}`);
+    const resolvedForemanTomlPath =
+      foremanTomlPath !== undefined
+        ? resolveConfigPath(foremanTomlPath, workspaceRoot)
+        : undefined;
 
     if (lutePath !== undefined) {
-      const foremanDirPath = foremanTomlPath
-        ? path.dirname(foremanTomlPath)
+      const foremanDirPath = resolvedForemanTomlPath
+        ? path.dirname(resolvedForemanTomlPath)
         : undefined;
 
       const { diagnostics, suggestedFixes } = await callLuteLint(
@@ -242,15 +249,14 @@ export async function activate(context: vscode.ExtensionContext) {
         foremanDirPath
       );
 
-      const rulesPath = vscode.workspace
-        .getConfiguration("mandolin")
-        .get("lintRules", "");
+      const rulesPath: string = mandolinConfig.get("lintRules", "");
 
       if (rulesPath !== "") {
-        log(`Using Lute lint rules: ${rulesPath}`);
+        const resolvedRulesPath = resolveConfigPath(rulesPath, workspaceRoot);
+        log(`Using Lute lint rules: ${resolvedRulesPath}`);
         const ruleResult = await callLuteLint(
           lutePath,
-          ["-j", "-r", rulesPath],
+          ["-j", "-r", resolvedRulesPath],
           document,
           foremanDirPath
         );

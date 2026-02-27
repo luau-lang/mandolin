@@ -25,4 +25,12 @@ export default defineConfig([
       timeout: 60000,
     },
   },
+  {
+    files: "out/test/resolveConfigPath.test.js",
+    workspaceFolder: "./src/test/sampleWorkspace",
+    mocha: {
+      ui: "tdd",
+      timeout: 60000,
+    },
+  },
 ]);
