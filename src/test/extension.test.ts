@@ -101,7 +101,7 @@ suite("Extension Test Suite", () => {
     const configContents = `return {
       lute = {
         lint = {
-          rules = {
+          ruleconfigs = {
             ["divide_by_zero"] = {
               off = true,
             }
@@ -122,7 +122,7 @@ suite("Extension Test Suite", () => {
     );
 
     try {
-      // Open a real workspace file so getWorkspaceFolder resolves correctly
+      // Open a real workspace file so workspaceFolders[0] resolves correctly
       const document = await vscode.workspace.openTextDocument(
         vscode.Uri.file(sourceFilePath)
       );
