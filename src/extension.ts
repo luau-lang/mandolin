@@ -242,7 +242,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ? path.dirname(resolvedForemanTomlPath)
         : undefined;
 
-       const configPath: string = mandolinConfig.get("lintConfigPath", "");
+      const configPath: string = mandolinConfig.get("lintConfigPath", "");
       const configArgs: string[] = [];
 
       if (configPath !== "") {
@@ -251,7 +251,7 @@ export async function activate(context: vscode.ExtensionContext) {
         configArgs.push("-c", resolvedConfigPath);
       }
 
-        const { diagnostics, suggestedFixes } = await callLuteLint(
+      const { diagnostics, suggestedFixes } = await callLuteLint(
         lutePath,
         ["-j", ...configArgs],
         document,
