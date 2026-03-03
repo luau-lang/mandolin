@@ -211,6 +211,8 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   }
 
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
   async function lint(document: vscode.TextDocument) {
     console.log(`Linting document: ${document.uri.toString()}`);
     if (document.languageId !== "luau" && document.languageId !== "lua") {
@@ -232,7 +234,7 @@ export async function activate(context: vscode.ExtensionContext) {
     log(`foreman.toml: ${foremanTomlPath}`);
     const resolvedForemanTomlPath =
       foremanTomlPath !== undefined
-        ? resolveConfigPath(foremanTomlPath, document.uri)
+        ? resolveConfigPath(foremanTomlPath, workspaceRoot)
         : undefined;
 
     if (lutePath !== undefined) {
@@ -240,16 +242,16 @@ export async function activate(context: vscode.ExtensionContext) {
         ? path.dirname(resolvedForemanTomlPath)
         : undefined;
 
-      const configPath: string = mandolinConfig.get("lintConfigPath", "");
+       const configPath: string = mandolinConfig.get("lintConfigPath", "");
       const configArgs: string[] = [];
 
       if (configPath !== "") {
-        const resolvedConfigPath = resolveConfigPath(configPath, document.uri);
+        const resolvedConfigPath = resolveConfigPath(configPath, workspaceRoot);
         log(`Using Lute lint config: ${resolvedConfigPath}`);
         configArgs.push("-c", resolvedConfigPath);
       }
 
-      const { diagnostics, suggestedFixes } = await callLuteLint(
+        const { diagnostics, suggestedFixes } = await callLuteLint(
         lutePath,
         ["-j", ...configArgs],
         document,
@@ -259,7 +261,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const rulesPath: string = mandolinConfig.get("lintRules", "");
 
       if (rulesPath !== "") {
-        const resolvedRulesPath = resolveConfigPath(rulesPath, document.uri);
+        const resolvedRulesPath = resolveConfigPath(rulesPath, workspaceRoot);
         log(`Using Lute lint rules: ${resolvedRulesPath}`);
         const ruleResult = await callLuteLint(
           lutePath,
