@@ -242,9 +242,18 @@ export async function activate(context: vscode.ExtensionContext) {
         ? path.dirname(resolvedForemanTomlPath)
         : undefined;
 
+      const configPath: string = mandolinConfig.get("lintConfigPath", "");
+      const configArgs: string[] = [];
+
+      if (configPath !== "") {
+        const resolvedConfigPath = resolveConfigPath(configPath, workspaceRoot);
+        log(`Using Lute lint config: ${resolvedConfigPath}`);
+        configArgs.push("-c", resolvedConfigPath);
+      }
+
       const { diagnostics, suggestedFixes } = await callLuteLint(
         lutePath,
-        ["-j"],
+        ["-j", ...configArgs],
         document,
         foremanDirPath
       );
@@ -256,7 +265,7 @@ export async function activate(context: vscode.ExtensionContext) {
         log(`Using Lute lint rules: ${resolvedRulesPath}`);
         const ruleResult = await callLuteLint(
           lutePath,
-          ["-j", "-r", resolvedRulesPath],
+          ["-j", "-r", resolvedRulesPath, ...configArgs],
           document,
           foremanDirPath
         );

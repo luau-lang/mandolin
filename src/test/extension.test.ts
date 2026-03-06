@@ -1,4 +1,6 @@
 import * as assert from "assert";
+import * as fs from "fs";
+import * as path from "path";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -10,14 +12,40 @@ import { waitForDiagnostics } from "./utils";
 
 suite("Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
+  const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+  const configFileName = ".config.luau";
+  const configFilePath = path.join(workspaceRoot, configFileName);
+  const config = vscode.workspace.getConfiguration("mandolin");
 
   suiteSetup(async () => {
     const lutePath = await which("lute");
     console.log(`Setting luteExecPath to ${lutePath} for tests.`);
-    const config = vscode.workspace.getConfiguration("mandolin");
+    fs.writeFileSync(configFilePath, "{}");
     await config.update(
       "luteExecPath",
       lutePath,
+      vscode.ConfigurationTarget.Workspace
+    );
+    await config.update(
+      "lintConfigPath",
+      configFilePath,
+      vscode.ConfigurationTarget.Workspace
+    );
+  });
+
+  suiteTeardown(async () => {
+    if (fs.existsSync(configFilePath)) {
+      fs.unlinkSync(configFilePath);
+    }
+
+    await config.update(
+      "lintConfigPath",
+      undefined,
+      vscode.ConfigurationTarget.Workspace
+    );
+    await config.update(
+      "luteExecPath",
+      undefined,
       vscode.ConfigurationTarget.Workspace
     );
   });
@@ -87,5 +115,53 @@ suite("Extension Test Suite", () => {
       vscode.DiagnosticTag.Unnecessary,
       "Expected tag to be Unnecessary"
     );
+  });
+
+  test("lintConfigPath is passed through to lute lint", async () => {
+    const sourceFileName = "test-divide-by-zero.luau";
+    const sourceFilePath = path.join(workspaceRoot, sourceFileName);
+
+    const configContents = `return {
+      lute = {
+        lint = {
+          ruleconfigs = {
+            ["divide_by_zero"] = {
+              off = true,
+            }
+          }
+        }
+      }
+    }`;
+
+    fs.writeFileSync(configFilePath, configContents, "utf-8");
+    fs.writeFileSync(sourceFilePath, `local x = 3 / 0`, "utf-8");
+
+    try {
+      // Open a real workspace file so workspaceFolders[0] resolves correctly
+      const document = await vscode.workspace.openTextDocument(
+        vscode.Uri.file(sourceFilePath)
+      );
+      await vscode.window.showTextDocument(document);
+
+      const diagnostics = await waitForDiagnostics(document.uri);
+      // there should be an unused_variable diagnostic
+      assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+
+      const divByZero = diagnostics.find(
+        (d) => typeof d.code === "object" && d.code.value === "divide_by_zero"
+      );
+      assert.equal(
+        divByZero,
+        undefined,
+        "Expected divide_by_zero to be suppressed by lintConfigPath"
+      );
+    } finally {
+      if (fs.existsSync(configFilePath)) {
+        fs.unlinkSync(configFilePath);
+      }
+      if (fs.existsSync(sourceFilePath)) {
+        fs.unlinkSync(sourceFilePath);
+      }
+    }
   });
 });
