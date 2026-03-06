@@ -133,9 +133,7 @@ suite("Extension Test Suite", () => {
       assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
       const divByZero = diagnostics.find(
-        (d) =>
-          d.code === "divide_by_zero" ||
-          (typeof d.code === "object" && d.code.value === "divide_by_zero")
+        (d) => typeof d.code === "object" && d.code.value === "divide_by_zero"
       );
       assert.equal(
         divByZero,
