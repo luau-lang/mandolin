@@ -195,20 +195,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (lutePathResult === null) {
     log("Lute executable path not found. Falling back to bundled Lute.");
-  } else if (lutePathResult.foremanToml !== null) {
-    const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
-
-    await mandolinConfig.update(
-      "luteExecPath",
-      lutePathResult.lutePath,
-      vscode.ConfigurationTarget.Workspace
-    );
-
-    await mandolinConfig.update(
-      "foremanTomlPath",
-      lutePathResult.foremanToml,
-      vscode.ConfigurationTarget.Workspace
-    );
   }
 
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -221,16 +207,21 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
 
-    const luteExecConfig = mandolinConfig.get("luteExecPath", "");
-
-    const lutePath: string =
-      luteExecConfig === ""
-        ? vscode.Uri.joinPath(context.extensionUri, "bin", "lute").fsPath
-        : luteExecConfig;
+    const bundledLutePath = vscode.Uri.joinPath(
+      context.extensionUri,
+      "bin",
+      "lute"
+    ).fsPath;
+    const lutePath =
+      mandolinConfig.get("luteExecPath", "") ||
+      lutePathResult?.lutePath ||
+      bundledLutePath;
     log(`Lute exec: ${lutePath}`);
 
-    const foremanTomlPath: string | undefined =
-      mandolinConfig.get("foremanTomlPath");
+    const foremanTomlPath =
+      mandolinConfig.get("foremanTomlPath", "") ||
+      lutePathResult?.foremanToml ||
+      undefined;
     log(`foreman.toml: ${foremanTomlPath}`);
     const resolvedForemanTomlPath =
       foremanTomlPath !== undefined
