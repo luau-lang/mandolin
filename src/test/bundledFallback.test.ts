@@ -13,14 +13,10 @@ import sinon from "sinon";
 import { waitForDiagnostics } from "./utils";
 
 suite("Bundled fallback suite", () => {
-  const outputChannelSpy = sinon.spy();
-  sinon
-    .stub(vscodeWindow, "createOutputChannel")
-    .returns({ appendLine: outputChannelSpy });
+  let outputChannelSpy: sinon.SinonSpy;
+  let config: vscode.WorkspaceConfiguration;
 
-  test("Bundled lute fallback", async () => {
-    // Clear settings
-    const config = vscode.workspace.getConfiguration("mandolin");
+  const resetMandolinConfig = async () => {
     await config.update(
       "luteExecPath",
       undefined,
@@ -31,7 +27,31 @@ suite("Bundled fallback suite", () => {
       undefined,
       vscode.ConfigurationTarget.Workspace
     );
+  };
 
+  suiteSetup(() => {
+    outputChannelSpy = sinon.spy();
+    config = vscode.workspace.getConfiguration("mandolin");
+    sinon.stub(vscodeWindow, "createOutputChannel").returns({
+      appendLine: outputChannelSpy,
+      dispose: () => undefined,
+    });
+  });
+
+  setup(async () => {
+    outputChannelSpy.resetHistory();
+    await resetMandolinConfig();
+  });
+
+  teardown(async () => {
+    await resetMandolinConfig();
+  });
+
+  suiteTeardown(() => {
+    sinon.restore();
+  });
+
+  test("Bundled lute fallback", async () => {
     // Delete foreman.toml to force bundled lute fallback
     const workspaceFolders = vscode.workspace.workspaceFolders;
     assert.ok(
@@ -80,19 +100,16 @@ suite("Bundled fallback suite", () => {
 
     // Restore foreman.toml
     await vscode.workspace.fs.writeFile(foremanTomlPath, foremanTomlContent);
-
-    sinon.restore();
   });
 
   test("luteExecPath specifies foreman lute, foremanTomlPath points to foreman.toml without lute (invalid lute binary path)", async () => {
-    const config = vscode.workspace.getConfiguration("mandolin");
     const foremanLutePath =
       process.platform === "win32"
         ? `${process.env.HOME}\\.foreman\\bin\\lute.exe`
         : `${process.env.HOME}/.foreman/bin/lute`;
 
-    // Create a temporary foreman.toml that does NOT declare lute
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mandolin-test-"));
+    // Create a temporary foreman.toml that does NOT declare lute
     const tmpForemanToml = path.join(tmpDir, "foreman.toml");
     fs.writeFileSync(
       tmpForemanToml,
@@ -133,17 +150,6 @@ suite("Bundled fallback suite", () => {
       "Expected fallback warning log"
     );
 
-    sinon.restore();
     fs.rmSync(tmpDir, { recursive: true, force: true });
-    await config.update(
-      "luteExecPath",
-      undefined,
-      vscode.ConfigurationTarget.Workspace
-    );
-    await config.update(
-      "foremanTomlPath",
-      undefined,
-      vscode.ConfigurationTarget.Workspace
-    );
   });
 });
