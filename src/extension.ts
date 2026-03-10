@@ -239,6 +239,20 @@ export async function activate(context: vscode.ExtensionContext) {
     const candidateLutePath =
       mandolinConfig.get("luteExecPath", "") || lutePathResult?.lutePath;
 
+    const foremanTomlPath =
+      mandolinConfig.get("foremanTomlPath", "") ||
+      lutePathResult?.foremanToml ||
+      undefined;
+    log(`foreman.toml: ${foremanTomlPath}`);
+    const resolvedForemanTomlPath =
+      foremanTomlPath !== undefined
+        ? resolveConfigPath(foremanTomlPath, workspaceRoot)
+        : undefined;
+
+    const foremanDirPath = resolvedForemanTomlPath
+      ? path.dirname(resolvedForemanTomlPath)
+      : undefined;
+
     let lutePath: string;
     if (
       candidateLutePath &&
@@ -255,21 +269,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
     log(`Lute exec: ${lutePath}`);
 
-    const foremanTomlPath =
-      mandolinConfig.get("foremanTomlPath", "") ||
-      lutePathResult?.foremanToml ||
-      undefined;
-    log(`foreman.toml: ${foremanTomlPath}`);
-    const resolvedForemanTomlPath =
-      foremanTomlPath !== undefined
-        ? resolveConfigPath(foremanTomlPath, workspaceRoot)
-        : undefined;
-
     if (lutePath !== undefined) {
-      const foremanDirPath = resolvedForemanTomlPath
-        ? path.dirname(resolvedForemanTomlPath)
-        : undefined;
-
       const configPath: string = mandolinConfig.get("lintConfigPath", "");
       const configArgs: string[] = [];
 
