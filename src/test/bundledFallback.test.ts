@@ -13,6 +13,11 @@ import sinon from "sinon";
 import { waitForDiagnostics } from "./utils";
 
 suite("Bundled fallback suite", () => {
+  const outputChannelSpy = sinon.spy();
+  sinon
+    .stub(vscodeWindow, "createOutputChannel")
+    .returns({ appendLine: outputChannelSpy });
+
   test("Bundled lute fallback", async () => {
     // Clear settings
     const config = vscode.workspace.getConfiguration("mandolin");
@@ -42,11 +47,6 @@ suite("Bundled fallback suite", () => {
 
     foremanTomlContent = await vscode.workspace.fs.readFile(foremanTomlPath);
     await vscode.workspace.fs.delete(foremanTomlPath);
-
-    const outputChannelSpy = sinon.spy();
-    sinon
-      .stub(vscodeWindow, "createOutputChannel")
-      .returns({ appendLine: outputChannelSpy });
 
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
@@ -110,11 +110,6 @@ suite("Bundled fallback suite", () => {
       vscode.ConfigurationTarget.Workspace
     );
 
-    const outputChannelSpy = sinon.spy();
-    sinon
-      .stub(vscodeWindow, "createOutputChannel")
-      .returns({ appendLine: outputChannelSpy });
-
     const document = await vscode.workspace.openTextDocument({
       language: "luau",
       content: `local x = 3 / 0`,
@@ -125,10 +120,8 @@ suite("Bundled fallback suite", () => {
     assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
     assert.ok(
-      outputChannelSpy.calledWith(
-        sinon.match((value: string) =>
-          value.includes(`Lute validation failed for ${foremanLutePath}`)
-        )
+      outputChannelSpy.calledWithMatch(
+        `Lute validation failed for ${foremanLutePath}`
       ),
       "Expected validation failure log for foreman lute binary"
     );
