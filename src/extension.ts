@@ -110,6 +110,29 @@ async function callLuteLint(
   return { diagnostics, suggestedFixes };
 }
 
+const luteExecCache = new Map<string, boolean>();
+
+async function validateLuteExec(
+  lutePath: string,
+  cwd?: string
+): Promise<boolean> {
+  const cacheKey = `${lutePath}::${cwd ?? ""}`;
+  const cached = luteExecCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  try {
+    await execFilePromise(lutePath, ["-s", "return"], { cwd });
+    luteExecCache.set(cacheKey, true);
+    return true;
+  } catch (error) {
+    log(`Lute validation failed for ${lutePath}: ${error}`);
+    luteExecCache.set(cacheKey, false);
+    return false;
+  }
+}
+
 interface LutePathResult {
   lutePath: string;
   foremanToml: string | null;
@@ -212,10 +235,24 @@ export async function activate(context: vscode.ExtensionContext) {
       "bin",
       "lute"
     ).fsPath;
-    const lutePath =
-      mandolinConfig.get("luteExecPath", "") ||
-      lutePathResult?.lutePath ||
-      bundledLutePath;
+
+    const candidateLutePath =
+      mandolinConfig.get("luteExecPath", "") || lutePathResult?.lutePath;
+
+    let lutePath: string;
+    if (
+      candidateLutePath &&
+      (await validateLuteExec(candidateLutePath, foremanDirPath))
+    ) {
+      lutePath = candidateLutePath;
+    } else {
+      if (candidateLutePath) {
+        log(
+          `Warning: Lute at ${candidateLutePath} failed to execute. Falling back to bundled Lute.`
+        );
+      }
+      lutePath = bundledLutePath;
+    }
     log(`Lute exec: ${lutePath}`);
 
     const foremanTomlPath =
