@@ -125,8 +125,10 @@ suite("Bundled fallback suite", () => {
     assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
 
     assert.ok(
-      outputChannelSpy.calledWithMatch(
-        `Lute validation failed for ${foremanLutePath}`
+      outputChannelSpy.calledWith(
+        sinon.match((value: string) =>
+          value.includes(`Lute validation failed for ${foremanLutePath}`)
+        )
       ),
       "Expected validation failure log for foreman lute binary"
     );
