@@ -249,7 +249,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ? resolveConfigPath(foremanTomlPath, workspaceRoot)
         : undefined;
 
-    const foremanDirPath = resolvedForemanTomlPath
+    let foremanDirPath = resolvedForemanTomlPath
       ? path.dirname(resolvedForemanTomlPath)
       : undefined;
 
@@ -266,6 +266,7 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       }
       lutePath = bundledLutePath;
+      foremanDirPath = undefined;
     }
     log(`Lute exec: ${lutePath}`);
 
