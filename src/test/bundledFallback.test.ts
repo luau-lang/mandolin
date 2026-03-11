@@ -145,7 +145,7 @@ suite("Bundled fallback suite", () => {
 
     assert.ok(
       outputChannelSpy.calledWithMatch(
-        `Warning: Lute at ${foremanLutePath} failed to execute from ${path.dirname(foremanLutePath)}. Falling back to bundled Lute.`
+        `Warning: Lute at ${foremanLutePath} failed to execute from directory: ${tmpDir}. Falling back to bundled Lute.`
       ),
       "Expected fallback warning log"
     );
