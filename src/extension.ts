@@ -123,7 +123,7 @@ async function validateLuteExec(
   }
 
   try {
-    await execFilePromise(lutePath, ["-s", "return"], { cwd });
+    await execFilePromise(lutePath, ["lute", "-s", "return"], { cwd });
     luteExecCache.set(cacheKey, true);
     return true;
   } catch (error) {
@@ -262,7 +262,7 @@ export async function activate(context: vscode.ExtensionContext) {
     } else {
       if (candidateLutePath) {
         log(
-          `Warning: Lute at ${candidateLutePath} failed to execute. Falling back to bundled Lute.`
+          `Warning: Lute at ${candidateLutePath} failed to execute ${foremanDirPath ? `from directory: ${foremanDirPath}` : ""}. Falling back to bundled Lute.`
         );
       }
       lutePath = bundledLutePath;
