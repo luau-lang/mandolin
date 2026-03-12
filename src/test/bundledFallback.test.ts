@@ -102,6 +102,41 @@ suite("Bundled fallback suite", () => {
     await vscode.workspace.fs.writeFile(foremanTomlPath, foremanTomlContent);
   });
 
+  test("when luteExecPath specifies a valid binary, that binary is used", async () => {
+    const extension = vscode.extensions.getExtension(
+      "undefined_publisher.mandolin"
+    );
+
+    const extensionPath = extension?.extensionPath;
+    assert.ok(extensionPath, "Failed to find extension path");
+
+    const validLutePath =
+      extensionPath && path.join(extensionPath, "bin", "lute");
+    assert.ok(validLutePath, "Failed to find valid lute path.");
+
+    await config.update(
+      "luteExecPath",
+      validLutePath,
+      vscode.ConfigurationTarget.Workspace
+    );
+
+    const document = await vscode.workspace.openTextDocument({
+      language: "luau",
+      content: `local x = 3 / 0`,
+    });
+    await vscode.window.showTextDocument(document);
+
+    const diagnostics = await waitForDiagnostics(document.uri);
+    assert.ok(diagnostics.length > 0, "Expected diagnostics to be generated");
+
+    assert.ok(
+      outputChannelSpy.calledWithMatch(
+        `Lute validation succeded for ${validLutePath}`
+      ),
+      "Expected validation success"
+    );
+  });
+
   test("luteExecPath specifies foreman lute, foremanTomlPath points to foreman.toml without lute (invalid lute binary path)", async () => {
     const foremanLutePath =
       process.platform === "win32"

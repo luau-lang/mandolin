@@ -125,6 +125,7 @@ async function validateLuteExec(
   try {
     await execFilePromise(lutePath, ["lint", "-s", "return"], { cwd });
     luteExecCache.set(cacheKey, true);
+    log(`Lute validation succeded for ${lutePath}`);
     return true;
   } catch (error) {
     log(`Lute validation failed for ${lutePath}: ${error}`);
