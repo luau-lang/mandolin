@@ -131,7 +131,7 @@ suite("Bundled fallback suite", () => {
 
     assert.ok(
       outputChannelSpy.calledWithMatch(
-        `Lute validation succeded for ${validLutePath}`
+        `Lute validation succeeded for ${validLutePath}`
       ),
       "Expected validation success"
     );
