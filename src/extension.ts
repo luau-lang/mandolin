@@ -123,7 +123,7 @@ async function validateLuteExec(
   }
 
   try {
-    await execFilePromise(lutePath, ["lute", "-s", "return"], { cwd });
+    await execFilePromise(lutePath, ["lint", "-s", "return"], { cwd });
     luteExecCache.set(cacheKey, true);
     return true;
   } catch (error) {
