@@ -2,6 +2,7 @@
   "name": "mandolin",
   "displayName": "Mandolin",
   "description": "Mandolin is an extension designed to consume lint violations reported by Lute!",
+  "publisher": "Roblox",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.105.1"
@@ -10,7 +11,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:luau"
+    "onLanguage:luau",
+    "workspaceContains:**/*.luau",
+    "workspaceContains:**/*.lua"
   ],
   "main": "./out/extension.js",
   "contributes": {

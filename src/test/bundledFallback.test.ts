@@ -103,9 +103,7 @@ suite("Bundled fallback suite", () => {
   });
 
   test("when luteExecPath specifies a valid binary, that binary is used", async () => {
-    const extension = vscode.extensions.getExtension(
-      "undefined_publisher.mandolin"
-    );
+    const extension = vscode.extensions.getExtension("Roblox.mandolin");
 
     const extensionPath = extension?.extensionPath;
     assert.ok(extensionPath, "Failed to find extension path");
