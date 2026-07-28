@@ -50,7 +50,47 @@
           "markdownDescription": "Optional path to a .config.luau file containing lute lint configuration."
         }
       }
-    }
+    }, 
+    "breakpoints": [{ "language": "luau" }],
+    "debuggers": [
+      {
+        "type": "lute",
+        "label": "Lute Debugger",
+        "languages": ["luau"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to the Luau file to debug.",
+                "default": "${file}"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "lute",
+            "request": "launch",
+            "name": "Debug Luau File",
+            "program": "${file}"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Lute Debug: Launch",
+            "description": "A new configuration for debugging a Luau file",
+            "body": {
+              "type": "lute",
+              "request": "launch",
+              "name": "Debug Luau File",
+              "program": "^\"\\${file}\""
+            }
+          }
+        ]
+      }
+    ]
   },
   "repository": {
     "type": "git",

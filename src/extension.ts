@@ -321,6 +321,26 @@ export async function activate(context: vscode.ExtensionContext) {
 
   vscode.workspace.textDocuments.forEach(lint);
 
+  context.subscriptions.push(
+    vscode.debug.registerDebugAdapterDescriptorFactory("lute", {
+      createDebugAdapterDescriptor(_session) {
+        const bundledLutePath = vscode.Uri.joinPath(
+          context.extensionUri,
+          "bin",
+          "lute"
+        ).fsPath;
+        const lutePath =
+          vscode.workspace
+            .getConfiguration("mandolin")
+            .get("luteExecPath", "") ||
+          lutePathResult?.lutePath ||
+          bundledLutePath;
+        log(`Starting debug adapter: ${lutePath} debug serve`);
+        return new vscode.DebugAdapterExecutable(lutePath, ["debug", "serve"]);
+      },
+    })
+  );
+
   log("Mandolin !");
 }
 
