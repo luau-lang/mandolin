@@ -335,8 +335,17 @@ export async function activate(context: vscode.ExtensionContext) {
             .get("luteExecPath", "") ||
           lutePathResult?.lutePath ||
           bundledLutePath;
-        log(`Starting debug adapter: ${lutePath} debug serve`);
-        return new vscode.DebugAdapterExecutable(lutePath, ["debug", "serve"]);
+        const debugCwd = lutePathResult?.foremanToml
+          ? path.dirname(lutePathResult.foremanToml)
+          : _session.workspaceFolder?.uri.fsPath;
+        log(
+          `Starting debug adapter: ${lutePath} debug serve (cwd: ${debugCwd ?? `process default (${process.cwd()})`})`
+        );
+        return new vscode.DebugAdapterExecutable(
+          lutePath,
+          ["debug", "serve"],
+          debugCwd ? { cwd: debugCwd } : undefined
+        );
       },
     })
   );
