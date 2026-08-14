@@ -181,7 +181,16 @@ suite("Extension Test Suite", () => {
       const initialized = waitForDebugAdapterEvent("lute", "initialized");
       const exited = waitForDebugAdapterEvent("lute", "exited");
       const terminated = waitForDebugAdapterEvent("lute", "terminated");
-
+      const ended = new Promise<void>((resolve) => {
+        const disposable = vscode.debug.onDidTerminateDebugSession(
+          (session) => {
+            if (session.type === "lute") {
+              disposable.dispose();
+              resolve();
+            }
+          }
+        );
+      });
       const ok = await vscode.debug.startDebugging(
         vscode.workspace.workspaceFolders![0],
         {
@@ -199,7 +208,7 @@ suite("Extension Test Suite", () => {
       await initialized;
       await exited;
       await terminated;
-      await vscode.debug.stopDebugging(session);
+      await ended;
     } finally {
       if (fs.existsSync(sourceFilePath)) {
         fs.unlinkSync(sourceFilePath);
