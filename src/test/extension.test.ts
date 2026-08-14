@@ -188,7 +188,7 @@ suite("Extension Test Suite", () => {
         request: "launch",
         name: "Debug Luau File",
         program: sourceFilePath,
-        trace: false
+        trace: false,
       }
     );
     assert.ok(ok, "startDebugging should resolve true");

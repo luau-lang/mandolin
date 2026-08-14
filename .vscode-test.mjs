@@ -4,6 +4,7 @@ export default defineConfig([
   {
     files: "out/test/extension.test.js",
     workspaceFolder: "./src/test/sampleWorkspace",
+    launchArgs: ["--disable-workspace-trust"],
     mocha: {
       ui: "tdd",
       timeout: 60000,
