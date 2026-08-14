@@ -323,7 +323,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.debug.registerDebugAdapterDescriptorFactory("lute", {
-      createDebugAdapterDescriptor(_session) {
+      createDebugAdapterDescriptor(session) {
         const bundledLutePath = vscode.Uri.joinPath(
           context.extensionUri,
           "bin",
@@ -337,7 +337,7 @@ export async function activate(context: vscode.ExtensionContext) {
           bundledLutePath;
         const debugCwd = lutePathResult?.foremanToml
           ? path.dirname(lutePathResult.foremanToml)
-          : _session.workspaceFolder?.uri.fsPath;
+          : session.workspaceFolder?.uri.fsPath;
         log(
           `Starting debug adapter: ${lutePath} debug serve (cwd: ${debugCwd ?? `process default (${process.cwd()})`})`
         );
@@ -346,6 +346,44 @@ export async function activate(context: vscode.ExtensionContext) {
           ["debug", "serve"],
           debugCwd ? { cwd: debugCwd } : undefined
         );
+      },
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.debug.registerDebugAdapterTrackerFactory("lute", {
+      createDebugAdapterTracker(session) {
+        if (!session.configuration.trace) {
+          return undefined;
+        }
+        let hasDisconnected = false;
+        return {
+          onWillStartSession() {
+            log(`[debug] Starting Lute debug session ${session.id}`);
+          },
+          onWillStopSession() {
+            log(`[debug] Stopping Lute debug session ${session.id}`);
+          },
+          onWillReceiveMessage(message) {
+            if (message.command === "disconnect") {
+              hasDisconnected = true;
+            }
+            log(`[debug] Received by DAP adapter: ${JSON.stringify(message)}`);
+          },
+          onDidSendMessage(message) {
+            log(`[debug] Sent by DAP adapter: ${JSON.stringify(message)}`);
+          },
+          onError(error) {
+            if (hasDisconnected && error.message === "read error") {
+              log('[debug] read error after disconnect (expected)');
+            } else {
+              log(`[debug] error: ${error.message}`);
+            }
+          },
+          onExit(code, signal) {
+            log(`[debug] DAP adapter exited (code=${code}, signal=${signal})`);
+          },
+        };
       },
     })
   );

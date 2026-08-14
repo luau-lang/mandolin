@@ -65,6 +65,11 @@
                 "type": "string",
                 "description": "Absolute path to the Luau file to debug.",
                 "default": "${file}"
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable tracing of the Debug Adapter Protocol messages.",
+                "default": false
               }
             }
           }
@@ -74,7 +79,8 @@
             "type": "lute",
             "request": "launch",
             "name": "Debug Luau File",
-            "program": "${file}"
+            "program": "${file}",
+            "trace": false
           }
         ],
         "configurationSnippets": [
@@ -85,7 +91,8 @@
               "type": "lute",
               "request": "launch",
               "name": "Debug Luau File",
-              "program": "^\"\\${file}\""
+              "program": "^\"\\${file}\"",
+              "trace": false
             }
           }
         ]

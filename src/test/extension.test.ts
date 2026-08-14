@@ -164,4 +164,6 @@ suite("Extension Test Suite", () => {
       }
     }
   });
+
+  test("check connection to Lute debugger", async () => {});
 });
