@@ -50,16 +50,24 @@
           "markdownDescription": "Optional path to a .config.luau file containing lute lint configuration."
         }
       }
-    }, 
-    "breakpoints": [{ "language": "luau" }],
+    },
+    "breakpoints": [
+      {
+        "language": "luau"
+      }
+    ],
     "debuggers": [
       {
         "type": "lute",
         "label": "Lute Debugger",
-        "languages": ["luau"],
+        "languages": [
+          "luau"
+        ],
         "configurationAttributes": {
           "launch": {
-            "required": ["program"],
+            "required": [
+              "program"
+            ],
             "properties": {
               "program": {
                 "type": "string",
