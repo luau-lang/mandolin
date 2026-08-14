@@ -51,3 +51,44 @@ export function waitForDiagnostics(
     );
   });
 }
+
+/**
+ * Waits for a specific Debug Adapter Protocol event (e.g. "stopped") to be sent
+ * by the debug adapter for the given debug type.
+ * @param debugType The `type` of the debug session to observe (e.g. "lute").
+ * @param eventName The DAP event name to wait for (e.g. "stopped").
+ * @param timeoutMs Maximum time to wait in milliseconds (default 30000ms).
+ */
+export function waitForDebugAdapterEvent(
+  debugType: string,
+  eventName: string,
+  timeoutMs: number = 30000
+): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      trackerDisposable.dispose();
+      reject(
+        new Error(
+          `Timeout: DAP event "${eventName}" was not received within ${timeoutMs}ms`
+        )
+      );
+    }, timeoutMs);
+
+    const trackerDisposable = vscode.debug.registerDebugAdapterTrackerFactory(
+      debugType,
+      {
+        createDebugAdapterTracker() {
+          return {
+            onDidSendMessage(message) {
+              if (message.type === "event" && message.event === eventName) {
+                clearTimeout(timer);
+                trackerDisposable.dispose();
+                resolve(message);
+              }
+            },
+          };
+        },
+      }
+    );
+  });
+}

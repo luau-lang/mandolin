@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 
 import which from "which";
 
-import { waitForDiagnostics } from "./utils";
+import { waitForDiagnostics, waitForDebugAdapterEvent } from "./utils";
 
 suite("Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
@@ -165,5 +165,39 @@ suite("Extension Test Suite", () => {
     }
   });
 
-  test("check connection to Lute debugger", async () => {});
+  test("connect to Lute debugger", async () => {
+    const sourceFilePath = path.join(workspaceRoot, "debug-target.luau");
+    fs.writeFileSync(sourceFilePath, `local x = 1\nprint(x)`, "utf-8");
+
+    const started = new Promise<vscode.DebugSession>((resolve) => {
+      const disposable = vscode.debug.onDidStartDebugSession((session) => {
+        if (session.type === "lute") {
+          disposable.dispose();
+          resolve(session);
+        }
+      });
+    });
+    const initialized = waitForDebugAdapterEvent("lute", "initialized");
+    const exited = waitForDebugAdapterEvent("lute", "exited");
+    const terminated = waitForDebugAdapterEvent("lute", "terminated");
+
+    const ok = await vscode.debug.startDebugging(
+      vscode.workspace.workspaceFolders![0],
+      {
+        type: "lute",
+        request: "launch",
+        name: "Debug Luau File",
+        program: sourceFilePath,
+        trace: false
+      }
+    );
+    assert.ok(ok, "startDebugging should resolve true");
+
+    const session = await started;
+    assert.equal(session.type, "lute");
+    await initialized;
+    await exited;
+    await terminated;
+    await vscode.debug.stopDebugging(session);
+  });
 });
