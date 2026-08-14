@@ -375,7 +375,7 @@ export async function activate(context: vscode.ExtensionContext) {
           },
           onError(error) {
             if (hasDisconnected && error.message === "read error") {
-              log('[debug] read error after disconnect (expected)');
+              log("[debug] read error after disconnect (expected)");
             } else {
               log(`[debug] error: ${error.message}`);
             }
