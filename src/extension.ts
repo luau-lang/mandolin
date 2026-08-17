@@ -329,23 +329,48 @@ export async function activate(context: vscode.ExtensionContext) {
           "bin",
           "lute"
         ).fsPath;
-        const lutePath =
-          vscode.workspace
-            .getConfiguration("mandolin")
-            .get("luteExecPath", "") ||
-          lutePathResult?.lutePath ||
-          bundledLutePath;
-        const debugCwd = lutePathResult?.foremanToml
-          ? path.dirname(lutePathResult.foremanToml)
-          : session.workspaceFolder?.uri.fsPath;
-        log(
-          `Starting debug adapter: ${lutePath} debug serve (cwd: ${debugCwd ?? `process default (${process.cwd()})`})`
-        );
-        return new vscode.DebugAdapterExecutable(
-          lutePath,
-          ["debug", "serve"],
-          debugCwd ? { cwd: debugCwd } : undefined
-        );
+        const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
+        const candidateLutePath =
+          mandolinConfig.get("luteExecPath", "") || lutePathResult?.lutePath;
+        const foremanTomlPath =
+          mandolinConfig.get("foremanTomlPath", "") ||
+          lutePathResult?.foremanToml ||
+          undefined;
+        const resolvedForemanTomlPath = foremanTomlPath
+          ? resolveConfigPath(foremanTomlPath, workspaceRoot)
+          : undefined;
+        const foremanDirPath = resolvedForemanTomlPath
+          ? path.dirname(resolvedForemanTomlPath)
+          : undefined;
+        return (async () => {
+          let lutePath: string;
+          let debugCwd: string | undefined;
+
+          if (
+            candidateLutePath &&
+            (await validateLuteExec(candidateLutePath, foremanDirPath))
+          ) {
+            lutePath = candidateLutePath;
+            debugCwd = foremanDirPath ?? session.workspaceFolder?.uri.fsPath;
+          } else {
+            if (candidateLutePath) {
+              log(
+                `Warning: Lute at ${candidateLutePath} failed to execute${foremanDirPath ? ` from directory: ${foremanDirPath}` : ""}. Falling back to bundled Lute.`
+              );
+            }
+            lutePath = bundledLutePath;
+            debugCwd = session.workspaceFolder?.uri.fsPath;
+          }
+
+          log(
+            `Starting debug adapter: ${lutePath} debug serve (cwd: ${debugCwd ?? `process default (${process.cwd()})`})`
+          );
+          return new vscode.DebugAdapterExecutable(
+            lutePath,
+            ["debug", "serve"],
+            debugCwd ? { cwd: debugCwd } : undefined
+          );
+        })();
       },
     })
   );
