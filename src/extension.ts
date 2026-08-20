@@ -195,7 +195,7 @@ async function getLutePath(): Promise<LutePathResult | null> {
   return { lutePath, foremanToml };
 }
 
-async function resolveLuteExecution(
+async function resolveLuteExecutable(
   context: vscode.ExtensionContext,
   workspaceRoot: string | undefined,
   lutePathResult: LutePathResult | null,
@@ -276,7 +276,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     const mandolinConfig = vscode.workspace.getConfiguration("mandolin");
-    const { lutePath, execCwd: foremanDirPath } = await resolveLuteExecution(
+    const { lutePath, execCwd: foremanDirPath } = await resolveLuteExecutable(
       context,
       workspaceRoot,
       lutePathResult,
@@ -339,7 +339,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.debug.registerDebugAdapterDescriptorFactory("lute", {
       createDebugAdapterDescriptor(session) {
         return (async () => {
-          const { lutePath, execCwd: debugCwd } = await resolveLuteExecution(
+          const { lutePath, execCwd: debugCwd } = await resolveLuteExecutable(
             context,
             workspaceRoot,
             lutePathResult,
