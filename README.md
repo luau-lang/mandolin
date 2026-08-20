@@ -4,7 +4,7 @@ Mandolin is designed to consume developer tooling related features of [Lute](htt
 
 ## Features
 
-Mandolin surfaces lint violations reported by `lute lint`, and supports specifying custom lint rules on a per-project basis.
+Mandolin surfaces lint violations reported by `lute lint`, and supports specifying custom lint rules on a per-project basis. Mandolin also enables VSCode debugging via the Lute debugger.
 
 ## Requirements
 
