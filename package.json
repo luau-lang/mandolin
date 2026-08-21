@@ -74,6 +74,14 @@
                 "description": "Absolute path to the Luau file to debug.",
                 "default": "${file}"
               },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Command-line arguments to pass to the script being debugged. These are passed in as a top-level variadic argument to your script.",
+                "default": []
+              },
               "trace": {
                 "type": "boolean",
                 "description": "Enable tracing of the Debug Adapter Protocol messages.",
@@ -88,6 +96,7 @@
             "request": "launch",
             "name": "Debug Luau File",
             "program": "${file}",
+            "args": [],
             "trace": false
           }
         ],
@@ -100,6 +109,7 @@
               "request": "launch",
               "name": "Debug Luau File",
               "program": "^\"\\${file}\"",
+              "args": [],
               "trace": false
             }
           }
