@@ -151,7 +151,7 @@ jobs:
         shell: bash
         run: |
           NIGHTLY_TAG=${{ steps.tag_step.outputs.tag }}
-          RELEASE_TAG="0.0.1$NIGHTLY_TAG"
+          RELEASE_TAG="0.1.0$NIGHTLY_TAG"
           echo "tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
       - name: Create Draft Release
