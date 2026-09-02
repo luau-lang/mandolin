@@ -4,7 +4,7 @@ Mandolin is designed to consume developer tooling related features of [Lute](htt
 
 ## Features
 
-Mandolin surfaces lint violations reported by `lute lint`, and supports specifying custom lint rules on a per-project basis. Mandolin also enables VSCode debugging via the Lute debugger.
+Mandolin surfaces lint violations reported by `lute lint`, and supports specifying custom lint rules on a per-project basis. Mandolin also enables VSCode debugging via the Lute debugger. For more information on how to use the Lute debugger, see [this reference page](https://lute.luau.org/cli/debug/#connecting-to-the-vs-code-mandolin-extension).
 
 ## Requirements
 
@@ -14,7 +14,7 @@ Mandolin surfaces lint violations reported by `lute lint`, and supports specifyi
 
 This extension contributes the following settings:
 
-- `mandolin.luteExecPath`: A path pointing to the `lute` binary to use to generate lint warnings.
+- `mandolin.luteExecPath`: A path pointing to the `lute` binary to use to generate lint warnings or to use as a DAP server.
 - `mandolin.lintRules`: A path pointing to a folder containing lint rules to use in addition to the default ones provided by `lute`.
 
 ## Development
